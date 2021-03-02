@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css"
+    />
+    <title>Page Title</title>
+    <style>
+      #container {
+        margin: 3rem auto;
+        max-width: 900px;
+      }
+    </style>
+  </head>
+  <body>
+    <details>
+      <summary>show websocket events</summary>
+      <table>
+        <thead>
+          <tr>
+            <th>Messages</th>
+          </tr>
+        </thead>
+        <tbody id="target"></tbody>
+      </table>
+    </details>
+    <div id="container"></div>
+    <script type="module">
+      import {
+        Runtime,
+        RuntimeError,
+        Inspector,
+      } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
+      import { createCellDefinition, parser } from "/compiler.js";
+
+      const runtime = new Runtime();
+      const main = runtime.module();
+      const observer = Inspector.into(document.querySelector("#container"));
+      const cellMap = new Map();
+
+      const target = document.querySelector("#target");
+
+      const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
+      // Connection opened
+      socket.addEventListener("open", function (event) {
+        console.log("Socket opened");
+      });
+
+      function onMessage(event) {
+        const m = JSON.parse(event.data);
+        const source = m.source;
+        const parsedModule = parser.parseModule(source);
+        // tmp map to add the "index" suffix to cellMap key
+        const idMap = new Map();
+        const newSourceCellMap = new Set();
+
+        for (const cell of parsedModule.cells) {
+          const src = cell.input.substring(cell.start, cell.end);
+          idMap.set(src, idMap.has(src) ? idMap.get(src) + 1 : 0);
+
+          const id = `${src}${idMap.get(src)}`;
+          newSourceCellMap.add(id);
+          if (cellMap.has(id)) continue; // TODO rearrange position
+          const variable = createCellDefinition(cell, main, observer);
+          cellMap.set(id, variable);
+        }
+
+        // delete previous cells that aren't in the new def
+        for (const [id, variables] of cellMap.entries()) {
+          if (!newSourceCellMap.has(id)) {
+            cellMap.delete(id);
+            if (Array.isArray(variables))
+              variables.map((v) => {
+                v._observer._node.remove();
+                v.delete();
+              });
+            else {
+              variables._observer._node.remove();
+              variables.delete();
+            }
+          }
+        }
+
+        let ptr = document.querySelector("#container").firstChild;
+        for (const id of newSourceCellMap) {
+          const variable = cellMap.get(id);
+          for (const v of Array.isArray(variable) ? variable : [variable]) {
+            if (ptr !== v._observer._node) {
+              v._observer._node.parentElement.insertBefore(
+                v._observer._node,
+                ptr
+              );
+            }
+
+            ptr = v._observer._node.nextSibling;
+          }
+        }
+      }
+      // Listen for messages
+      socket.addEventListener("message", onMessage);
+    </script>
+  </body>
+</html>
