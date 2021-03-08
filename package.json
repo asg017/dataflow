@@ -1,13 +1,19 @@
 {
   "name": "@alex.garcia/dataflow",
-  "version": "0.0.0",
-  "main": "index.js",
+  "version": "0.0.1",
+  "main": "src/dataflow",
   "repository": "git@github.com:asg017/selfhosted-observable.git",
   "author": "Alex Garcia <alexsebastian.garcia@gmail.com>",
-  "license": "TBD",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "dataflow": "src/dataflow"
   },
+  "files": [
+    "src/*"
+  ],
   "dependencies": {
     "@alex.garcia/unofficial-observablehq-compiler": "^0.5.0",
     "chokidar": "^3.5.1",
