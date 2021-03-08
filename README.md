@@ -172,7 +172,7 @@ Import with the notebook's full URL. Note that `"@d3/bar-chart"` alone wouldn't 
 ```javascript
 viewof color = html`<input type=color value="#c8ce57">`
 
-import {chart} with {color} "https://observablehq.com/@d3/bar-chart"
+import {chart} with {color} from "https://observablehq.com/@d3/bar-chart"
 
 import {Checkbox} from "https://observablehq.com/@observablehq/input-checkbox"
 
