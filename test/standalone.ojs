@@ -1,0 +1,30 @@
+md`## Standalone
+
+exporting this to JS/HTML should work as expected`
+
+
+viewof a = html`<input type=range min=1 max=100 step=1>`
+
+mutable b = 10
+
+html`<div>
+<button onClick=${ () => mutable b = 20}>b = 20</button>
+<button onClick=${ () => mutable b = 40}>b = 40</button>
+<button onClick=${ () => mutable b = 60}>b = 60</button>`
+
+
+c = a + b
+
+
+svg`<svg width=200 height=100>
+<rect width=200 height=100 fill=lightpink></rect>
+<text x=100 y=50 text-anchor=middle alignment-baseline=middle fill=red font-size=64px>yoo</text>`
+
+
+d3 = require("d3@6")
+
+d3.range(2000)
+
+import {chart} from "https://observablehq.com/@d3/bar-chart"
+
+chart

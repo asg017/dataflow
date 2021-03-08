@@ -1,0 +1,18 @@
+/*
+FileAttachments:
+    file: ./data/a.txt
+    notexist: ./data/notexist.txt
+*/
+
+md`
+## Existing File Attachments
+
+Toggle \`file: ./data/a.txt\` above to \`b.txt\` or \`c.txt\` and this should update
+`;
+fileContents = FileAttachment("file").text();
+
+md`
+## Not existant FA
+`;
+
+FileAttachment("notexist").text();

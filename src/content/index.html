@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css"
+    />
+    <title>Page Title</title>
+    <script src="https://cdn.jsdelivr.net/npm/htl"></script>
+    <style>
+      :root {
+        --font-sans-serif: system-ui, -apple-system, segoe ui, roboto, ubuntu,
+          helvetica, cantarell, noto sans, sans-serif;
+        --font-monospace: menlo, monaco, lucida console, liberation mono,
+          dejavu sans mono, bitstream vera sans mono, courier new, monospace,
+          serif;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        text-rendering: geometricPrecision;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        -webkit-tap-highlight-color: transparent;
+        font-family: var(--font-sans-serif);
+      }
+      html {
+        padding: 0;
+        text-decoration-skip-ink: "auto";
+        margin: auto;
+        min-height: 100%;
+        overflow-x: hidden;
+      }
+
+      body {
+        padding: 0;
+        word-wrap: break-word;
+      }
+      pre,
+      code {
+        font-family: var(--font-monospace);
+      }
+      #container {
+        margin: 3rem auto;
+        max-width: 900px;
+        overflow: hidden;
+      }
+      .observablehq {
+        margin: 1.25rem 0;
+        overflow: auto;
+        box-sizing: content-box;
+      }
+      .observablehq--inspect {
+        font-size: 1rem;
+      }
+      body {
+        margin: 0;
+      }
+      .footer-status {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background-color: #ddd;
+        height: 1.5rem;
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/a11y-light.css"
+      integrity="sha256-7Ci437NptsJ20PYDV1yQgfJf5M1mtLRPJe1TPRYj/M4="
+      crossorigin="anonymous"
+    />
+  </head>
+  <body>
+    <div id="container" class="markdown-body"></div>
+    <div class="footer-status">all good</div>
+    <script>
+      ||STDLIB_INJECT||
+    </script>
+    <script type="module">
+      import {
+        Runtime,
+        RuntimeError,
+        Inspector,
+        Library,
+      } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
+      import { createCellDefinition, parser } from "/compiler.js";
+
+      async function resolveNotebook(name) {
+        if (name.startsWith("https://observablehq.com")) {
+          const u = new URL(name);
+          return import(
+            `https://api.observablehq.com${u.pathname}.js?v=3`
+          ).then((m) => m.default);
+        }
+        return import(`/api/local-import/${name}`).then((m) => m.default);
+      }
+
+      if (!window.OJS_STDLIB)
+        window.OJS_STDLIB = { constants: {}, dependency: {} };
+      if (!window.OJS_STDLIB.constants) window.OJS_STDLIB.constants = {};
+      if (!window.OJS_STDLIB.dependency) window.OJS_STDLIB.dependency = {};
+      const library = Object.assign(
+        new Library(),
+        {
+          html: () => htl.html,
+          svg: () => htl.svg,
+        },
+        window.OJS_STDLIB.constants
+      );
+
+      const customLibraryResolved = {};
+      // key = already added library builtin, e.g. "require", "width"
+      // value = { newBuiltin1: def, newBuiltin2: def }
+      for (const [depBuiltin, newBuiltins] of Object.entries(
+        window.OJS_STDLIB.dependency
+      )) {
+        for (const [newBuiltinName, newBuiltinDefinition] of Object.entries(
+          newBuiltins
+        )) {
+          const depDef = library[depBuiltin];
+          Object.defineProperty(library, newBuiltinName, {
+            writable: true,
+            enumerable: true,
+            value:
+              typeof depDef === "function"
+                ? newBuiltinDefinition(depDef())
+                : depDef.then((r) => newBuiltinDefinition(r)),
+          });
+        }
+      }
+      const runtime = new Runtime(library);
+
+      const main = runtime.module();
+      const fileAttachments = new Map();
+      main.define(
+        "FileAttachment",
+        runtime.fileAttachments((name) => fileAttachments.get(name).endoint)
+      );
+      main.define(
+        "Secret",
+        () => (name) =>
+          fetch(`/api/secrets/${name}`).then((r) => {
+            if (!r.ok) {
+              if (r.status === 403) {
+                throw Error(
+                  "Secret access not allow. Enable with --allow-secrets."
+                );
+              }
+              if (r.status === 404) {
+                throw Error(
+                  `Secret name "${name}" not found. Pass in with ---secret ${name}:value.`
+                );
+              }
+              throw Error(
+                `An unknown error occurred when fetching Secret "${name}": status code ${r.status}`
+              );
+            }
+            return r.text();
+          })
+        //.catch((err) => console.error(3, err))
+      );
+      const observer = Inspector.into(document.querySelector("#container"));
+      const cellMap = new Map();
+      const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
+      // Connection opened
+      socket.addEventListener("open", function (event) {
+        console.log("Socket opened");
+      });
+
+      socket.addEventListener("close", function (err) {
+        console.log("Socket closed");
+      });
+
+      async function onMessage(event) {
+        console.log("received msg", event);
+        const m = JSON.parse(event.data);
+        const source = m.source;
+        const parsedModule = parser.parseModule(source);
+        // tmp map to add the "index" suffix to cellMap key
+        const idMap = new Map();
+        const newSourceCellMap = new Set();
+
+        if (m.fileAttachments) {
+          // if the new FAs have new keys, or updated values, update FA
+          let newFA = false;
+          // key=FA name, value=endpoint to get data
+          ///debugger;
+          for (const [key, value] of m.fileAttachments) {
+            if (
+              !fileAttachments.has(key) ||
+              fileAttachments.get(key).sha !== value.sha ||
+              fileAttachments.get(key).endpoint !== value.endpoint
+            ) {
+              console.log("NEW", key, value);
+              fileAttachments.set(key, value);
+              console.log(fileAttachments.get(key));
+              newFA = true;
+            }
+          }
+          console.log(newFA);
+          // if the old FA has any keys that have been delete, delete them
+          const tmpMFAmap = new Map(m.fileAttachments);
+          for (const [key, value] of fileAttachments) {
+            if (!tmpMFAmap.has(key)) {
+              console.log("NEW2");
+              fileAttachments.delete(key);
+              newFA = true;
+            }
+          }
+
+          if (newFA) {
+            main.redefine("FileAttachment", () =>
+              runtime.fileAttachments(
+                (name) => fileAttachments.get(name)?.endpoint
+              )
+            );
+          }
+        }
+
+        for (const cell of parsedModule.cells) {
+          const src = cell.input.substring(cell.start, cell.end);
+          idMap.set(src, idMap.has(src) ? idMap.get(src) + 1 : 0);
+
+          const id = `${src}${idMap.get(src)}`;
+          newSourceCellMap.add(id);
+          if (cellMap.has(id)) continue;
+          let variable;
+          if (cell?.body?.type === "ImportDeclaration") {
+            const tmpDepMap = new Map();
+            tmpDepMap.set(
+              cell?.body?.source?.value,
+              await resolveNotebook(cell?.body?.source?.value)
+            );
+            variable = createCellDefinition(cell, main, observer, tmpDepMap);
+          } else variable = createCellDefinition(cell, main, observer);
+          cellMap.set(id, variable);
+        }
+
+        // delete previous cells that aren't in the new def
+        for (const [id, variables] of cellMap.entries()) {
+          if (!newSourceCellMap.has(id)) {
+            cellMap.delete(id);
+            if (Array.isArray(variables))
+              variables.map((v) => {
+                if (v._observer._node) v._observer._node.remove();
+                v.delete();
+              });
+            else {
+              if (variables._observer._node) variables._observer._node.remove();
+              variables.delete();
+            }
+          }
+        }
+
+        let ptr = document.querySelector("#container").firstChild;
+        for (const id of newSourceCellMap) {
+          const variable = cellMap.get(id);
+          for (const v of Array.isArray(variable) ? variable : [variable]) {
+            if (!v._observer._node) continue;
+            if (ptr !== v._observer._node) {
+              v._observer._node.parentElement.insertBefore(
+                v._observer._node,
+                ptr
+              );
+            }
+
+            ptr = v._observer._node.nextSibling;
+          }
+        }
+      }
+      // Listen for messages
+      socket.addEventListener("message", onMessage);
+    </script>
+  </body>
+</html>

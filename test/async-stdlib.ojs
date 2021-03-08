@@ -1,0 +1,19 @@
+md`
+# Async stdlib testing
+`;
+
+md`
+This should be d5 version 5
+`;
+
+d3v5;
+
+d3v5.version;
+
+md`
+This should be d5 version 6
+`;
+
+d3v6;
+
+d3v6.version;

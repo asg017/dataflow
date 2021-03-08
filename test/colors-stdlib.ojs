@@ -1,0 +1,12 @@
+color = (color) =>
+  html`<div
+    style="background-color: ${color}; font-size: 2rem; font-weight: 800;"
+  >
+    ${color}
+  </div>`;
+
+r = color(red);
+
+g = color(green);
+
+b = color(blue);

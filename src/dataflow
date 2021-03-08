@@ -1,0 +1,69 @@
+#!/usr/bin/env node
+const { program } = require("commander");
+const { exportNotebook } = require("./export");
+const { runServer } = require("./run");
+
+function parseSecrets(values) {
+  const secrets = new Map();
+  for (const value of values) {
+    const colonI = value.indexOf(":");
+    if (colonI < 0)
+      throw Error(
+        `--secret error: colon not found.  syntax: "name:value", found "${value}"`
+      );
+    secrets.set(
+      value.substring(0, colonI),
+      value.substring(colonI + 1, value.length)
+    );
+  }
+  return secrets;
+}
+
+program
+  .command("export <notebook> <outfile>")
+  .description(
+    "Export a notebook to a standaline JS ES module or a HTML page. FileAttachments, Secrets, custom stdlib, and importing local .ojs files is NOT supported yet."
+  )
+  .option(
+    "-f, --format <format>",
+    '"js" or "html", whether to compile to a javascript ES module or a standalone HTML page. Otherwise infered from output file path. ',
+    "js"
+  )
+  .action((inPath, outPath, options) => {
+    exportNotebook(inPath, outPath, options);
+  });
+
+program
+  .command("run <notebook>")
+  .description(
+    "Start a server that runs the given Observable notebook (from a .ojs file)."
+  )
+  .option(
+    "--stdlib <path>",
+    "Path to JS file that the browser will execute as-is to add to the notebooks builtin variables."
+  )
+  .option(
+    "--allow-file-attachments",
+    "Allow all .ojs notebooks access the filesystem with the FileAttachments feature.",
+    false
+  )
+  .option(
+    "--allow-secrets",
+    "Allow all .ojs notebooks access to passed in Secrets.",
+    false
+  )
+  .option("--secret, [secret_name:secret_value...]")
+  .option("-p, --port <number>", "Port that the server should listen on", 8080)
+  .action((notebook, options) => {
+    const secrets = parseSecrets(options.secret || []);
+    runServer({
+      port: +options.port,
+      allowFileAttachments: options.allowFileAttachments,
+      stdibPath: options.stdlib,
+      notebookPath: notebook,
+      allowSecrets: options.allowSecrets,
+      secrets,
+    });
+  });
+
+program.parse(process.argv);
