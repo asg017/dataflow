@@ -181,7 +181,6 @@ function runServer(params = {}) {
 
   //TODO
   function originIsAllowed(origin) {
-    console.log(`origin ${origin}`);
     return true;
   }
 

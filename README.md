@@ -2,6 +2,14 @@
 
 An experimental self-hosted Observable notebook alternative, with support for FileAttachments, Secrets, and custom standard libraries.
 
+### Install
+
+```bash
+npm i -g @alex.garcia/dataflow
+
+dataflow --help
+```
+
 ## Features
 
 ### `.ojs` Files: "Observable JavaScript"
