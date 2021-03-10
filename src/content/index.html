@@ -95,6 +95,8 @@
       } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
       import { createCellDefinition, parser } from "/compiler.js";
 
+      const container = document.querySelector("#container");
+
       async function resolveNotebook(name) {
         if (name.startsWith("https://observablehq.com")) {
           const u = new URL(name);
@@ -109,11 +111,24 @@
         window.OJS_STDLIB = { constants: {}, dependency: {} };
       if (!window.OJS_STDLIB.constants) window.OJS_STDLIB.constants = {};
       if (!window.OJS_STDLIB.dependency) window.OJS_STDLIB.dependency = {};
+      const baseLibrary = new Library();
       const library = Object.assign(
-        new Library(),
+        baseLibrary,
         {
           html: () => htl.html,
           svg: () => htl.svg,
+          width: () => {
+            return baseLibrary.Generators.observe((change) => {
+              change(null);
+              const ro = new ResizeObserver((entries) => {
+                for (let entry of entries) {
+                  change(entry.contentRect.width);
+                }
+              });
+              ro.observe(container);
+              return () => ro.disconnect();
+            });
+          },
         },
         window.OJS_STDLIB.constants
       );
@@ -169,7 +184,7 @@
           })
         //.catch((err) => console.error(3, err))
       );
-      const observer = Inspector.into(document.querySelector("#container"));
+      const observer = Inspector.into(container);
       const cellMap = new Map();
       const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
       // Connection opened
@@ -259,7 +274,7 @@
           }
         }
 
-        let ptr = document.querySelector("#container").firstChild;
+        let ptr = container.firstChild;
         for (const id of newSourceCellMap) {
           const variable = cellMap.get(id);
           for (const v of Array.isArray(variable) ? variable : [variable]) {

@@ -10,6 +10,7 @@ const { ModuleParser } = require("@observablehq/parser");
 const { resolve, dirname, join } = require("path");
 const yaml = require("js-yaml");
 const crypto = require("crypto");
+const open = require("open");
 
 function sha256(s) {
   const shasum = crypto.createHash("sha256");
@@ -214,7 +215,9 @@ function runServer(params = {}) {
   });
 
   server.listen(port, function () {
-    console.log(`${Date.now()} Server is listening on port ${port}`);
+    const url = `http://localhost:${port}`;
+    console.log(`${Date.now()} Server started at ${url}`);
+    open(url);
   });
 }
 
