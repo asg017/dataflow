@@ -67,6 +67,23 @@
         width: 100%;
         background-color: #ddd;
         height: 1.5rem;
+        font-weight: 600;
+      }
+      .error-syntax {
+        position: absolute;
+        bottom: 0;
+        right: 0px;
+        border: 1px solid #f96060;
+        min-width: 450px;
+        min-height: 150px;
+        background-color: rgb(225, 140, 140);
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+        transition: right 0.5s ease-in-out;
+      }
+      .error-syntax.hidden {
+        opacity: 0;
+        right: -450px;
       }
     </style>
     <link
@@ -82,7 +99,8 @@
   </head>
   <body>
     <div id="container" class="markdown-body"></div>
-    <div class="footer-status">all good</div>
+    <div class="footer-status"></div>
+    <div class="error-syntax hidden"></div>
     <script>
       ||STDLIB_INJECT||
     </script>
@@ -185,6 +203,7 @@
       const cellMap = new Map();
 
       const container = document.querySelector("#container");
+      const errContainer = document.querySelector(".error-syntax");
       const observer = Inspector.into(container);
 
       const library = computeLibrary();
@@ -203,7 +222,32 @@
         console.log("received msg", event);
         const m = JSON.parse(event.data);
         const source = m.source;
-        const parsedModule = parser.parseModule(source);
+        let parsedModule;
+
+        while (errContainer.firstChild)
+          errContainer.removeChild(errContainer.firstChild);
+
+        try {
+          parsedModule = parser.parseModule(source);
+          errContainer.classList.add("hidden");
+        } catch (err) {
+          errContainer.classList.remove("hidden");
+
+          const sourceLines = source.split("\n");
+          errContainer.appendChild(htl.html`<div style="padding: .5rem;">
+            <div style="font-weight: 700; font-size: 1.2rem;">${err.name}</div>
+            <div style="margin: 1rem 0;">${err.message}</div>
+            <div style="background-color: rgba(220, 38, 38, .5);">
+              <span style="margin-right: .5rem; background-color: rgba(220, 38, 38, .6);">
+                ${err.loc.line}
+              </span>
+            <code>${sourceLines[err.loc.line - 1]}</code>
+            </div>`);
+          console.log(err);
+          window.err = err;
+          window.source = source;
+          return;
+        }
         // tmp map to add the "index" suffix to cellMap key
         const idMap = new Map();
         const newSourceCellMap = new Set();
@@ -293,14 +337,19 @@
         }
       }
 
+      const statusFooter = document.querySelector(".footer-status");
+
       function connect() {
         const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
         socket.addEventListener("open", function (event) {
           console.log("Socket opened");
+          statusFooter.textContent = "✅ Socket connected!";
         });
 
         socket.addEventListener("close", function (err) {
           console.log("Socket is closed. Reconnecting....");
+          statusFooter.textContent =
+            "⌛ Connection closed, attempting to reconnect...";
           setTimeout(connect, 250);
         });
 

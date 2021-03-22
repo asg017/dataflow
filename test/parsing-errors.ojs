@@ -1,0 +1,26 @@
+//const lol = 123
+
+md`
+# test - parsing errors
+`;
+
+md`
+## 1) semicolons
+
+Remove the semicolon after width, parsing error should be displayed.
+`;
+
+width;
+
+{
+    return 1;
+}
+
+md`
+## 2) .ojs differences
+
+Uncomment this, see error message.
+`;
+
+
+//const name = "Alex"

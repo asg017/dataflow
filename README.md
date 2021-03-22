@@ -270,6 +270,8 @@ automated testing is for suckers
   - `./src/dataflow run ./test/file-attachments.ojs --allow-file-attachments`
 - Secrets
   - `export TOKEN=abc123; ./src/dataflow run ./test/secrets.ojs --secret PASSWORD:hunter2 --secret TOKEN:$TOKEN --allow-secrets`
+- Error handling
+  - `src/dataflow run ./test/parsing-errors.ojs `
 
 ## compiler
 
