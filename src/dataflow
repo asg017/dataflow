@@ -20,6 +20,7 @@ function parseSecrets(values) {
 }
 
 program
+  .version(require("../package.json").version)
   .command("export <notebook> <outfile>")
   .description(
     "Export a notebook to a standaline JS ES module or a HTML page. FileAttachments, Secrets, custom stdlib, and importing local .ojs files is NOT supported yet."

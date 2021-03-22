@@ -2,7 +2,7 @@
 
 An experimental self-hosted Observable notebook alternative, with support for FileAttachments, Secrets, and custom standard libraries.
 
-### Install
+## Install
 
 ```bash
 npm i -g @alex.garcia/dataflow
@@ -40,6 +40,7 @@ md`It's been ${everySecond} seconds since everySecond has started.`
 A few things to note:
 
 - Just like observablehq.com, Dataflow uses the [Observable notebook Standard Library](https://github.com/observablehq/stdlib), some cells like `Promises`, `html`, `md`, `require`, and more all are builtin by default.
+- `html` and `svg` uses [@observablehq/htl](https://github.com/observablehq/htl)
 - `viewof` and `mutable` cells are supported
 - Cells are written one after the other, where the entire `example.ojs` file is analagous to a single Observable notebook.
 
@@ -48,7 +49,7 @@ See [Observable’s not JavaScript
 
 ### Live Updating Notebooks
 
-To run the file above, you run:
+To run the file above:
 
 ```bash
 dataflow run example.ojs
@@ -58,11 +59,11 @@ A server will start at http://localhost:8080, and if you navigate there, you wil
 
 Every change to the example.ojs file will automatically update. Every new cell, deleted cell, even re-arranged cells with automatically update all connected clients.
 
-This also means you can use whatever text editor you want: VS Code, vim, emacs, nano, whatever can edit a file!
+This also means you can use whatever text editor you want: VS Code, vim, nano, whatever can edit a file!
 
 ### FileAttachments
 
-Filesystem acess from a Dataflow instance is possible! You'll have to specifically allow access from the `dataflow run` command:
+Filesystem access from a Dataflow instance is possible! You'll have to explicitly allow access from the `dataflow run` command:
 
 ```
 dataflow run example.ojs --allow-file-attachments
@@ -84,7 +85,7 @@ md`Contents of a.txt: ${a}`;
 img = FileAttachment("image.png").image();
 ```
 
-The top comment must be a `/* ... */` style comment, where the body is a YAML object, with a single key `FileAttachments`, which defines an object where the keys are the "API-friendly" name of a file attachment, and the value is the path relative to the `.ojs` file of the FileAttachment.
+The top comment must be a `/* ... */` style comment, where the body is a YAML object, with a single key `FileAttachments`, which defines an object where the keys are the "API-friendly" name of a file attachment, and the values are the path relative to the `.ojs` file of the FileAttachment.
 
 ### Secrets
 
@@ -102,7 +103,7 @@ apiToken = Secret("API_TOKEN");
 password = Secret("PASSWORD");
 ```
 
-One key difference here: a `Secret("key")` call returns a Promise, not the secret directly.
+One key difference here from observablehq Secrets: a `Secret("key")` call returns a Promise, not the secret directly.
 
 ### Custom Standard Libraries
 
@@ -182,7 +183,7 @@ viewof selection = Checkbox(["Alameda", "Alpine" ,"Los Angeles", "San Diego"])
 
 ### Importing local `.ojs` files
 
-Local `.ojs` files can be imported! They will be compiled to ES modules on the fly.
+Local `.ojs` files can be imported! They will be compiled to ES modules ✨on the fly✨.
 
 ```javascript
 // submodule.ojs
@@ -247,7 +248,7 @@ dataflow export test.ojs test.html
 ### cool stuff that someone else could do
 
 - [ ] webpack/esbuild .ojs files?
-  - `import chart from "./notebooks/chart.ojs"
+  - `import chart from "./notebooks/chart.ojs"`
   - react `<div> <Notebook define={chart}/> </div>`
 - [ ] editor integrations
   - vs code syntax fix for .ojs, viewof, mutable, etc.
@@ -267,13 +268,13 @@ automated testing is for suckers
   - `./src/dataflow run ./test/async-stdlib.ojs --stdlib ./test/stdlib/async.js `
 - FileAttachments
   - `./src/dataflow run ./test/file-attachments.ojs --allow-file-attachments`
-- Secrests
-  - `$ export TOKEN=abc123; ./src/dataflow run ./test/secrets.ojs --secret PASSWORD:hunter2 --secret TOKEN:$TOKEN --allow-secrets`
+- Secrets
+  - `export TOKEN=abc123; ./src/dataflow run ./test/secrets.ojs --secret PASSWORD:hunter2 --secret TOKEN:$TOKEN --allow-secrets`
 
 ## compiler
 
 had to fork the compiler bc the public API isn't enough :/
 
-```
-$ esbuild src/index.js --bundle --outfile=esbuild-test.js --format=esm --minify
+```bash
+esbuild src/index.js --bundle --outfile=esbuild-test.js --format=esm --minify
 ```

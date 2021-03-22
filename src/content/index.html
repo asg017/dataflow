@@ -95,8 +95,6 @@
       } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
       import { createCellDefinition, parser } from "/compiler.js";
 
-      const container = document.querySelector("#container");
-
       async function resolveNotebook(name) {
         if (name.startsWith("https://observablehq.com")) {
           const u = new URL(name);
@@ -107,94 +105,99 @@
         return import(`/api/local-import/${name}`).then((m) => m.default);
       }
 
-      if (!window.OJS_STDLIB)
-        window.OJS_STDLIB = { constants: {}, dependency: {} };
-      if (!window.OJS_STDLIB.constants) window.OJS_STDLIB.constants = {};
-      if (!window.OJS_STDLIB.dependency) window.OJS_STDLIB.dependency = {};
-      const baseLibrary = new Library();
-      const library = Object.assign(
-        baseLibrary,
-        {
-          html: () => htl.html,
-          svg: () => htl.svg,
-          width: () => {
-            return baseLibrary.Generators.observe((change) => {
-              change(null);
-              const ro = new ResizeObserver((entries) => {
-                for (let entry of entries) {
-                  change(entry.contentRect.width);
-                }
+      function computeLibrary() {
+        if (!window.OJS_STDLIB)
+          window.OJS_STDLIB = { constants: {}, dependency: {} };
+        if (!window.OJS_STDLIB.constants) window.OJS_STDLIB.constants = {};
+        if (!window.OJS_STDLIB.dependency) window.OJS_STDLIB.dependency = {};
+        const baseLibrary = new Library();
+        const library = Object.assign(
+          baseLibrary,
+          {
+            html: () => htl.html,
+            svg: () => htl.svg,
+            width: () => {
+              return baseLibrary.Generators.observe((change) => {
+                change(null);
+                const ro = new ResizeObserver((entries) => {
+                  for (let entry of entries) {
+                    change(entry.contentRect.width);
+                  }
+                });
+                ro.observe(container);
+                return () => ro.disconnect();
               });
-              ro.observe(container);
-              return () => ro.disconnect();
-            });
+            },
           },
-        },
-        window.OJS_STDLIB.constants
-      );
+          window.OJS_STDLIB.constants
+        );
 
-      const customLibraryResolved = {};
-      // key = already added library builtin, e.g. "require", "width"
-      // value = { newBuiltin1: def, newBuiltin2: def }
-      for (const [depBuiltin, newBuiltins] of Object.entries(
-        window.OJS_STDLIB.dependency
-      )) {
-        for (const [newBuiltinName, newBuiltinDefinition] of Object.entries(
-          newBuiltins
+        const customLibraryResolved = {};
+        // key = already added library builtin, e.g. "require", "width"
+        // value = { newBuiltin1: def, newBuiltin2: def }
+        for (const [depBuiltin, newBuiltins] of Object.entries(
+          window.OJS_STDLIB.dependency
         )) {
-          const depDef = library[depBuiltin];
-          Object.defineProperty(library, newBuiltinName, {
-            writable: true,
-            enumerable: true,
-            value:
-              typeof depDef === "function"
-                ? newBuiltinDefinition(depDef())
-                : depDef.then((r) => newBuiltinDefinition(r)),
-          });
+          for (const [newBuiltinName, newBuiltinDefinition] of Object.entries(
+            newBuiltins
+          )) {
+            const depDef = library[depBuiltin];
+            Object.defineProperty(library, newBuiltinName, {
+              writable: true,
+              enumerable: true,
+              value:
+                typeof depDef === "function"
+                  ? newBuiltinDefinition(depDef())
+                  : depDef.then((r) => newBuiltinDefinition(r)),
+            });
+          }
         }
       }
+
+      function defineSecret(name) {
+        return fetch(`/api/secrets/${name}`).then((r) => {
+          if (!r.ok) {
+            if (r.status === 403) {
+              throw Error(
+                "Secret access not allow. Enable with --allow-secrets."
+              );
+            }
+            if (r.status === 404) {
+              throw Error(
+                `Secret name "${name}" not found. Pass in with ---secret ${name}:value.`
+              );
+            }
+            throw Error(
+              `An unknown error occurred when fetching Secret "${name}": status code ${r.status}`
+            );
+          }
+          return r.text();
+        });
+      }
+
+      function defineFileAttachment(runtime, fileAttachments) {
+        return () =>
+          runtime.fileAttachments(
+            (name) => fileAttachments.get(name)?.endpoint
+          );
+      }
+
+      const cellMap = new Map();
+
+      const container = document.querySelector("#container");
+      const observer = Inspector.into(container);
+
+      const library = computeLibrary();
       const runtime = new Runtime(library);
 
       const main = runtime.module();
       const fileAttachments = new Map();
+
       main.define(
         "FileAttachment",
-        runtime.fileAttachments((name) => fileAttachments.get(name).endoint)
+        defineFileAttachment(runtime, fileAttachments)
       );
-      main.define(
-        "Secret",
-        () => (name) =>
-          fetch(`/api/secrets/${name}`).then((r) => {
-            if (!r.ok) {
-              if (r.status === 403) {
-                throw Error(
-                  "Secret access not allow. Enable with --allow-secrets."
-                );
-              }
-              if (r.status === 404) {
-                throw Error(
-                  `Secret name "${name}" not found. Pass in with ---secret ${name}:value.`
-                );
-              }
-              throw Error(
-                `An unknown error occurred when fetching Secret "${name}": status code ${r.status}`
-              );
-            }
-            return r.text();
-          })
-        //.catch((err) => console.error(3, err))
-      );
-      const observer = Inspector.into(container);
-      const cellMap = new Map();
-      const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
-      // Connection opened
-      socket.addEventListener("open", function (event) {
-        console.log("Socket opened");
-      });
-
-      socket.addEventListener("close", function (err) {
-        console.log("Socket closed");
-      });
+      main.define("Secret", () => defineSecret);
 
       async function onMessage(event) {
         console.log("received msg", event);
@@ -231,10 +234,9 @@
           }
 
           if (newFA) {
-            main.redefine("FileAttachment", () =>
-              runtime.fileAttachments(
-                (name) => fileAttachments.get(name)?.endpoint
-              )
+            main.redefine(
+              "FileAttachment",
+              defineFileAttachment(runtime, fileAttachments)
             );
           }
         }
@@ -290,8 +292,22 @@
           }
         }
       }
-      // Listen for messages
-      socket.addEventListener("message", onMessage);
+
+      function connect() {
+        const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
+        socket.addEventListener("open", function (event) {
+          console.log("Socket opened");
+        });
+
+        socket.addEventListener("close", function (err) {
+          console.log("Socket is closed. Reconnecting....");
+          setTimeout(connect, 250);
+        });
+
+        socket.addEventListener("message", onMessage);
+      }
+
+      connect();
     </script>
   </body>
 </html>
