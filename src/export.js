@@ -4,7 +4,7 @@ const { readFileSync, writeFileSync } = require("rw").dash;
 async function exportNotebook(inPath, outPath, options) {
   const { format = "js" } = options;
   const compile = new Compiler();
-  const esmSource = await compile.moduleToESModule(readFileSync(inPath));
+  const esmSource = await compile.module(readFileSync(inPath));
   if (format.toLowerCase() === "html" || outPath.endsWith(".html")) {
     return writeFileSync(
       outPath,
