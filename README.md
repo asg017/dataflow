@@ -262,21 +262,22 @@ dataflow export test.ojs test.html
 
 automated testing is for suckers
 
-- stdlib
-  - `./src/dataflow run ./test/colors-stdlib.ojs --stdlib ./test/stdlib/colors1.js`
-  - `./src/dataflow run ./test/colors-stdlib.ojs --stdlib ./test/stdlib/colors2.js`
-  - `./src/dataflow run ./test/async-stdlib.ojs --stdlib ./test/stdlib/async.js `
-- FileAttachments
-  - `./src/dataflow run ./test/file-attachments.ojs --allow-file-attachments`
-- Secrets
-  - `export TOKEN=abc123; ./src/dataflow run ./test/secrets.ojs --secret PASSWORD:hunter2 --secret TOKEN:$TOKEN --allow-secrets`
-- Error handling
-  - `src/dataflow run ./test/parsing-errors.ojs `
-
-## compiler
-
-had to fork the compiler bc the public API isn't enough :/
-
 ```bash
-esbuild src/index.js --bundle --outfile=esbuild-test.js --format=esm --minify
+# stdlib
+./src/dataflow run ./test/colors-stdlib.ojs --stdlib ./test/stdlib/colors1.js --no-open
+./src/dataflow run ./test/colors-stdlib.ojs --stdlib ./test/stdlib/colors2.js --no-open
+./src/dataflow run ./test/async-stdlib.ojs --stdlib ./test/stdlib/async.js --no-open
+
+
+# FileAttachments
+./src/dataflow run ./test/file-attachments.ojs --allow-file-attachments --no-open
+
+# Secrets
+export TOKEN=abc123; ./src/dataflow run ./test/secrets.ojs --secret PASSWORD:hunter2 --secret TOKEN:$TOKEN --allow-secrets --no-open
+
+# Error handling
+src/dataflow run ./test/parsing-errors.ojs --no-open
+
+# imports
+src/dataflow run ./test/import-top.ojs --no-open
 ```

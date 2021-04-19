@@ -55,6 +55,7 @@ program
   )
   .option("--secret, [secret_name:secret_value...]")
   .option("-p, --port <number>", "Port that the server should listen on", 8080)
+  .option("--no-open", "Don't open a new browser window on launch")
   .action((notebook, options) => {
     const secrets = parseSecrets(options.secret || []);
     runServer({
@@ -63,6 +64,7 @@ program
       stdibPath: options.stdlib,
       notebookPath: notebook,
       allowSecrets: options.allowSecrets,
+      open: options.open,
       secrets,
     });
   });

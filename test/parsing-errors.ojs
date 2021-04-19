@@ -2,6 +2,10 @@
 
 md`
 # test - parsing errors
+
+~~~bash
+code ./test/parsing-errors.ojs
+~~~
 `;
 
 md`
@@ -13,7 +17,7 @@ Remove the semicolon after width, parsing error should be displayed.
 width;
 
 {
-    return 1;
+  return 1;
 }
 
 md`
@@ -22,5 +26,4 @@ md`
 Uncomment this, see error message.
 `;
 
-
-//const name = "Alex"
+//const name = "Alex";

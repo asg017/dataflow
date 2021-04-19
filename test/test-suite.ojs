@@ -1,0 +1,8 @@
+md`
+# Test Suite
+`;
+
+function equals(actual, expected) {
+  if (actual !== expected) return html`<div>FAIL</div>`;
+  return html`<div>PASS</div>`;
+}

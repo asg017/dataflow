@@ -13,7 +13,7 @@ window.OJS_STDLIB = {
           <circle cx=50 cy=50 r=30 fill=green></circle>
           <circle cx=50 cy=50 r=20 fill=red></circle>`,
     },
-    d3: {
+    d3v6: {
       fakeData: (d3) => d3.range(200),
     },
   },

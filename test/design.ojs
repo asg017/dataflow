@@ -1,0 +1,107 @@
+md`# Test Design`
+
+md`---
+
+[Source](https://en.wikipedia.org/wiki/John_F._Kennedy)
+
+## Level 2
+
+John Fitzgerald Kennedy (May 29, 1917 – November 22, 1963), often referred to by his initials JFK, was an American politician who served as the 35th president of the United States from 1961 until his assassination in 1963. \`Kennedy\` served at the height of the Cold War, and the majority of his work as president concerned relations with the Soviet Union and Cuba. A Democrat, Kennedy represented Massachusetts in both houses of the U.S. Congress prior to becoming president. https://github.com/d3/d3
+
+
+
+### Level 3
+
+In September 1931, Kennedy started attending Choate, a prestigious boarding school in Wallingford, Connecticut, for 9th through 12th grade. His older brother Joe Jr. had already been at Choate for two years and was a football player and leading student. He spent his first years at Choate in his older brother's shadow and compensated with rebellious behavior that attracted a coterie. Their most notorious stunt was exploding a toilet seat with a powerful firecracker. In the next chapel assembly, the strict headmaster, George St. John, brandished the toilet seat and spoke of certain "muckers" who would "spit in our sea". Defiantly Kennedy took a cue and named his group "The Muckers Club", which included roommate and lifelong friend Kirk LeMoyne "Lem" Billings.[19]
+
+
+
+#### Level 4
+
+When Kennedy was an upperclassman at Harvard, he began to take his studies more seriously and developed an interest in political philosophy. He made the dean's list in his junior year.[32] In 1940 Kennedy completed his thesis, "Appeasement in Munich", about British negotiations during the Munich Agreement. The thesis eventually became a bestseller under the title Why England Slept.[33] In addition to addressing Britain's unwillingness to strengthen its military in the lead-up to World War II, the book also called for an Anglo-American alliance against the rising totalitarian powers. Kennedy became increasingly supportive of U.S. intervention in World War II, and his father's isolationist beliefs resulted in the latter's dismissal as ambassador to the United Kingdom. This created a split between the Kennedy and Roosevelt families.[34]
+
+
+
+##### Level 5
+
+In 1940, Kennedy graduated cum laude from Harvard with a Bachelor of Arts in government, concentrating on international affairs. That fall, he enrolled at the Stanford Graduate School of Business and audited classes there.[35] In early 1941, Kennedy left and helped his father write a memoir of his time as an American ambassador. He then traveled throughout South America; his itinerary included Colombia, Ecuador and Peru.[36][37]
+
+
+---`
+
+tex.block`\begin{aligned}
+\frac{\mathrm{d}🐁}{\mathrm{d}t} &= \alpha 🐁-\beta 🐁🐈 \\[2ex]
+\frac{\mathrm{d}🐈}{\mathrm{d}t} &= \delta 🐁🐈-\gamma 🐈
+\end{aligned}`
+
+
+md`
+[Source](https://github.com/d3/d3-selection)
+
+~~~html
+<script src="https://cdn.jsdelivr.net/npm/d3-selection@2"></script>
+<script>
+
+const div = d3.selectAll("div");
+
+</script>
+~~~
+
+~~~javascript
+
+const x = 1234;
+const y = 1234;
+
+const div = d3.select("body")
+  .selectAll("div")
+  .data([4, 8, 15, 16, 23, 42])
+  .enter().append("div")
+    .text(d => d);
+
+selection.each(function(d) { foo.set(this, d.value); });
+
+viewof x = html\`<input type=range value=.5>\`
+
+~~~`
+
+md`- apples
+- bananas
+- oranges
+- fwuit snaccs
+
+> Roses are red,
+
+> Violets are blue,
+
+>  Sugar is sweet,
+
+>  And so are you.`
+
+commits = fetch('https://api.github.com/repos/streamlit/streamlit/commits').then(r=>r.json())
+
+md`|Table|column| longer column name
+|-|-|-
+${commits.map(d=>`|${d.sha}|${d.commit.author.name}|${d.commit.author.date}`).join("\n")}`
+
+md`---`
+
+import {viewof selection} from "https://observablehq.com/@d3/brushable-scatterplot"
+
+viewof selection 
+
+md`## Tables`
+
+Table = (await require("@observablehq/inputs")).Table
+
+Table(
+    Array.from({ length: 100 }, () => ({
+      a: Math.random(),
+      b: Math.random(),
+      c: Math.random(),
+      d: Math.random(),
+      x: Math.random(),
+      y: Math.random(),
+      z: Math.random(),
+      zz: Math.random()
+    }))
+  )

@@ -1,0 +1,56 @@
+md`# Test: import-top`
+
+a = 100;
+
+b = 200;
+
+md`## Test A: import local .ojs`
+
+import {c as Ca} with {a, b} from "./import-suba.ojs"
+
+Ca
+
+Ca === -100 
+    ? md`✅ suba import successful.` 
+    : md`❌ suba import not successful: ${a} - ${b} != -100, instead ${Ca}`
+
+md`## Test B: import another local .ojs`
+
+import {c as Cb} with {a, b} from "./import-subb.ojs"
+
+Cb
+
+Cb === 20000 
+    ? md`✅ subb import successful.` 
+    : md`❌ subb import not successful: ${a} x ${b} != 20000, instead ${Cb}`
+
+md`## Test C: import observablehq notebook`
+
+import {c as Cc} with {a, b} from "https://observablehq.com/@asg017/dataflow-test-a-xor-b"
+
+
+Cc
+
+Cc === 172 
+    ? md`✅ subc import successful.` 
+    : md`❌ subc import not successful: ${a} ^ ${b} != 172, instead ${Cc}`;
+
+md`---`
+
+md`## Test D: import local .ojs that imports another .ojs`
+
+import {c as Cd} with {a, b} from "./import-subd.ojs"
+
+Cd
+
+Cd === .5
+    ? md`✅ subd import successful.` 
+    : md`❌ subd import not successful: ${a} / ${b} != .5, instead ${Cd}`
+
+md`---`
+
+md`## TODO`
+
+md`- import local .ojs that imports from observablehq
+- does looping cause it to die
+- import local pre-compiled ES module`

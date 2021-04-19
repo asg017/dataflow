@@ -15,7 +15,7 @@
     "src/*"
   ],
   "dependencies": {
-    "@alex.garcia/unofficial-observablehq-compiler": "^0.5.0",
+    "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.5",
     "chokidar": "^3.5.1",
     "commander": "^7.1.0",
     "js-yaml": "^4.0.0",

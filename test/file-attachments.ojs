@@ -5,9 +5,13 @@ FileAttachments:
 */
 
 md`
-## Existing File Attachments
+# Existing File Attachments
 
 Toggle \`file: ./data/a.txt\` above to \`b.txt\` or \`c.txt\` and this should update
+
+~~~bash
+code ./test/file-attachments.ojs
+~~~
 `;
 
 fileContents = FileAttachment("file").text();

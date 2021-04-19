@@ -8,7 +8,7 @@
       type="text/css"
       href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css"
     />
-    <title>Page Title</title>
+    <title>Dataflow</title>
     <script src="https://cdn.jsdelivr.net/npm/htl"></script>
     <style>
       :root {
@@ -55,7 +55,11 @@
         box-sizing: content-box;
       }
       .observablehq--inspect {
+        overflow: hidden;
         font-size: 1rem;
+      }
+      .observablehq--md-pre {
+        font-size: 0.9rem !important;
       }
       body {
         margin: 0;
@@ -70,7 +74,7 @@
         font-weight: 600;
       }
       .error-syntax {
-        position: absolute;
+        position: fixed;
         bottom: 0;
         right: 0px;
         border: 1px solid #f96060;
@@ -86,10 +90,10 @@
         right: -450px;
       }
     </style>
-    <link
+    <!--<link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.css"
-    />
+    />-->
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/a11y-light.css"
@@ -111,9 +115,12 @@
         Inspector,
         Library,
       } from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
-      import { createCellDefinition, parser } from "/compiler.js";
+      import {
+        Interpreter,
+        parser,
+      } from "https://cdn.jsdelivr.net/npm/@alex.garcia/unofficial-observablehq-compiler@0.6.0-alpha.4/dist/index-esm.js";
 
-      async function resolveNotebook(name) {
+      async function resolveImportPath(name) {
         if (name.startsWith("https://observablehq.com")) {
           const u = new URL(name);
           return import(
@@ -160,6 +167,7 @@
             newBuiltins
           )) {
             const depDef = library[depBuiltin];
+            console.log(depBuiltin, depDef, library);
             Object.defineProperty(library, newBuiltinName, {
               writable: true,
               enumerable: true,
@@ -170,6 +178,7 @@
             });
           }
         }
+        return library;
       }
 
       function defineSecret(name) {
@@ -210,6 +219,11 @@
       const runtime = new Runtime(library);
 
       const main = runtime.module();
+      const interpret = new Interpreter({
+        resolveImportPath,
+        observeViewofValues: false,
+        observeMutableValues: false,
+      });
       const fileAttachments = new Map();
 
       main.define(
@@ -230,22 +244,22 @@
         try {
           parsedModule = parser.parseModule(source);
           errContainer.classList.add("hidden");
-        } catch (err) {
+        } catch (error) {
+          console.error(error);
           errContainer.classList.remove("hidden");
 
           const sourceLines = source.split("\n");
           errContainer.appendChild(htl.html`<div style="padding: .5rem;">
-            <div style="font-weight: 700; font-size: 1.2rem;">${err.name}</div>
-            <div style="margin: 1rem 0;">${err.message}</div>
+            <div style="font-weight: 700; font-size: 1.2rem;">${
+              error.name
+            }</div>
+            <div style="margin: 1rem 0;">${error.message}</div>
             <div style="background-color: rgba(220, 38, 38, .5);">
               <span style="margin-right: .5rem; background-color: rgba(220, 38, 38, .6);">
-                ${err.loc.line}
+                ${error.loc.line}
               </span>
-            <code>${sourceLines[err.loc.line - 1]}</code>
+            <code>${sourceLines[error.loc.line - 1]}</code>
             </div>`);
-          console.log(err);
-          window.err = err;
-          window.source = source;
           return;
         }
         // tmp map to add the "index" suffix to cellMap key
@@ -292,38 +306,52 @@
           const id = `${src}${idMap.get(src)}`;
           newSourceCellMap.add(id);
           if (cellMap.has(id)) continue;
-          let variable;
-          if (cell?.body?.type === "ImportDeclaration") {
-            const tmpDepMap = new Map();
-            tmpDepMap.set(
-              cell?.body?.source?.value,
-              await resolveNotebook(cell?.body?.source?.value)
-            );
-            variable = createCellDefinition(cell, main, observer, tmpDepMap);
-          } else variable = createCellDefinition(cell, main, observer);
-          cellMap.set(id, variable);
+          const variables = await interpret
+            .cell(cell, main, observer)
+            .catch((error) => {
+              console.error("Error loading notebook ", error, cell);
+              return [
+                main.variable(observer()).define(
+                  null,
+                  ["html"],
+                  (html) =>
+                    html`<div style="border: 1px solid maroon;">
+                      <b>big oof import didn't work buddy</b>
+                      <pre>${cell.input.substring(cell.start, cell.end)}</pre>
+                      <details style="display: inline-block;">
+                        <summary style="display: inline-block;">
+                          show error
+                        </summary>
+                        <div>
+                          ${error.message}
+                          <pre>${error.stack}</pre>
+                        </div>
+                      </details>
+                    </div>`
+                ),
+              ];
+            });
+          cellMap.set(id, variables);
         }
 
         // delete previous cells that aren't in the new def
         for (const [id, variables] of cellMap.entries()) {
           if (!newSourceCellMap.has(id)) {
             cellMap.delete(id);
-            if (Array.isArray(variables))
-              variables.map((v) => {
-                if (v._observer._node) v._observer._node.remove();
-                v.delete();
-              });
-            else {
-              if (variables._observer._node) variables._observer._node.remove();
-              variables.delete();
-            }
+            variables.map((v) => {
+              if (v._observer._node) v._observer._node.remove();
+              v.delete();
+            });
           }
         }
 
         let ptr = container.firstChild;
         for (const id of newSourceCellMap) {
-          const variable = cellMap.get(id);
-          for (const v of Array.isArray(variable) ? variable : [variable]) {
+          const variables = cellMap.get(id);
+          // failed imports
+          if (!variables) continue;
+
+          for (const v of variables) {
             if (!v._observer._node) continue;
             if (ptr !== v._observer._node) {
               v._observer._node.parentElement.insertBefore(

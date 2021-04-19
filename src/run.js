@@ -19,7 +19,10 @@ function sha256(s) {
 }
 
 async function handleLocalImport(request, response, notebookPath) {
-  const compile = new Compiler();
+  const compile = new Compiler({
+    resolveImportPath: (path) =>
+      `http://localhost:8080/api/local-import/${path}`,
+  });
   const importFile = request.url.slice("/api/local-import/".length);
   const importFilePath = resolve(dirname(notebookPath), importFile);
   console.log(importFilePath);
@@ -27,9 +30,7 @@ async function handleLocalImport(request, response, notebookPath) {
     "Content-Type": "text/javascript",
     "Access-Control-Allow-Origin": "*",
   });
-  return response.end(
-    await compile.moduleToESModule(readFileSync(importFilePath))
-  );
+  return response.end(await compile.module(readFileSync(importFilePath)));
 }
 
 async function handleApiFileAttachment(
@@ -149,15 +150,6 @@ function runServer(params = {}) {
       );
       return response.end(indexHTML);
     }
-    if (request.method === "GET" && request.url === "/compiler.js") {
-      response.writeHead(200, {
-        "Content-Type": "text/javascript",
-        "Access-Control-Allow-Origin": "*",
-      });
-      return response.end(
-        readFileSync(resolve(join(__dirname, "content", "esbuild-test.js")))
-      );
-    }
     if (request.method === "GET" && request.url.startsWith("/api/local-import"))
       return handleLocalImport(request, response, notebookPath);
     if (request.method === "GET" && request.url.startsWith("/api/local-fa"))
@@ -217,7 +209,7 @@ function runServer(params = {}) {
   server.listen(port, function () {
     const url = `http://localhost:${port}`;
     console.log(`${Date.now()} Server started at ${url}`);
-    open(url);
+    params.open && open(url);
   });
 }
 

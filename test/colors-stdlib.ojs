@@ -1,3 +1,5 @@
+import { equals } from "./test-suite.ojs";
+
 color = (color) =>
   html`<div
     style="background-color: ${color}; font-size: 2rem; font-weight: 800;"

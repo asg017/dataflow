@@ -2,20 +2,20 @@
 # yarn lockfile v1
 
 
-"@alex.garcia/unofficial-observablehq-compiler@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@alex.garcia/unofficial-observablehq-compiler/-/unofficial-observablehq-compiler-0.5.0.tgz#3fba866eba54f2ddd31cde52b74eaade9ebf2ecc"
-  integrity sha512-Ay9D6KaLPEE3O/jgt/v45tNBCLC14dono5rB3uiWz45a4WPpAfndmSYQ0lvPI2utRmZhvjsnIAJZDGGDCW+HTg==
+"@alex.garcia/unofficial-observablehq-compiler@0.6.0-alpha.5":
+  version "0.6.0-alpha.5"
+  resolved "https://registry.yarnpkg.com/@alex.garcia/unofficial-observablehq-compiler/-/unofficial-observablehq-compiler-0.6.0-alpha.5.tgz#d4f1f06958be35f0aac1f57b95b4b7c4325d0b91"
+  integrity sha512-q//mlo1mMs3ZwOCjuvy7r9t2gFzudXT9fRaA68NQW1HRv+q7Snj1ABOF6U0MF0213dJKFZ9TZJ32iqTbBohxuA==
   dependencies:
-    "@observablehq/parser" "^3.0.0"
+    "@observablehq/parser" "4.2"
     acorn-walk "^7.0.0"
 
-"@observablehq/parser@^3.0.0":
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/@observablehq/parser/-/parser-3.0.2.tgz#58dad32bc6168dbdc81ed93ba0e5efc8559cde80"
-  integrity sha512-e09UXb9K008NTtQDaZqOfNMCwbfG7yQHlGpAh82Y0Aq0qyvM+mWBaQGkk4dHG51b2F6xYhcg+Nv6sBw5fqAS9w==
+"@observablehq/parser@4.2":
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/@observablehq/parser/-/parser-4.2.0.tgz#74f34b4fbed4b71e54c6f97e34d9209a6a745f18"
+  integrity sha512-i1v95BrUB4urKEBIL1CEPWCU8DovxKyMlWf03pEfpOfi5/DiESQ58QRQM6Ws+Sy/nwKXnIx8IMj4kX28Bif4xQ==
   dependencies:
-    acorn "^7.0.0"
+    acorn "^7.1.1"
     acorn-walk "^7.0.0"
 
 acorn-walk@^7.0.0:
@@ -23,7 +23,7 @@ acorn-walk@^7.0.0:
   resolved "https://registry.yarnpkg.com/acorn-walk/-/acorn-walk-7.2.0.tgz#0de889a601203909b0fbe07b8938dc21d2e967bc"
   integrity sha512-OPdCF6GsMIP+Az+aWfAAOEt2/+iVDKE7oy6lJ098aoe59oAmK76qV6Gw60SbZ8jHuG2wH058GF4pLFbYamYrVA==
 
-acorn@^7.0.0:
+acorn@^7.1.1:
   version "7.4.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
