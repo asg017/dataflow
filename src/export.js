@@ -147,6 +147,19 @@ async function exportNotebook(inPath, outDir, options) {
     ojsFilesResolved.set(ojsFile, `${sha}.js`);
   }
 
+  const fileAttachmentSHAs = new Map();
+  for (const fa of fileAttachments) {
+    if (
+      fileAttachmentSHAs.has(fa.refName) &&
+      fileAttachmentSHAs.get(fa.refName).path !== fa.path
+    )
+      console.warn(
+        "Warning: Multiple FileAttachments contain the same name, which might clash with each other. This will be fixed in a future Dataflow release."
+      );
+    const sha = sha256(readFileSync(fa.path));
+    fileAttachmentSHAs.set(fa.refName, { sha, path: fa.path });
+  }
+
   function resolveImportPath(name) {
     if (isObservablehq(name)) {
       const u = new URL(name);
@@ -165,16 +178,13 @@ async function exportNotebook(inPath, outDir, options) {
     const key = Array.from(ojsFilesResolved.keys()).find((absPath) =>
       absPath.endsWith(`/${name.replace(/^\.\//, "")}`)
     );
-    console.log(name, key, ojsFilesResolved);
-
     return `./${ojsFilesResolved.get(key)}`;
   }
 
   function resolveFileAttachments(name) {
-    const d = fileAttachments.find((d) => d.refName === name);
+    const d = fileAttachmentSHAs.get(name);
     if (!d) return `""`;
-    // TODO use SHA hash here instead of fa file name
-    return `new URL("./files/${path.basename(d.path)}", import.meta.url)`;
+    return `new URL("./files/${d.sha}", import.meta.url)`;
   }
 
   const compile = new Compiler({
@@ -189,6 +199,11 @@ async function exportNotebook(inPath, outDir, options) {
   // for any local .ojs file, write them to directory
   for (const ojsFile of ojsFiles) {
     const sourceCode = readFileSync(ojsFile);
+
+    // TODO to truly avoid conflicts, i think we'll need a new compiler
+    // for every individual .ojs file thats spefic to that ojs file.
+    // to ensure file attachments an importe js files with the same
+    // name don't clash.
     const esmSource = await compile.module(sourceCode);
 
     const target = path.join(outDir, ojsFilesResolved.get(ojsFile));
@@ -198,8 +213,10 @@ async function exportNotebook(inPath, outDir, options) {
   if (fileAttachments.length) {
     mkdirSync(path.join(outDir, "files"));
     for (const fa of fileAttachments) {
-      // TODO use SHA for filename instead of fa file name
-      copyFileSync(fa.path, path.join(outDir, "files", path.basename(fa.path)));
+      copyFileSync(
+        fa.path,
+        path.join(outDir, "files", fileAttachmentSHAs.get(fa.refName).sha)
+      );
     }
   }
   const top = ojsFilesResolved.get(ojsFiles[0]);
