@@ -230,6 +230,16 @@ dataflow export test.ojs test.html
 
 ## TODO
 
+- cleanup and error prone export
+- export .ojs file name clashing
+- export FA name clashing
+- pre-bundle observable as well?
+- error prone import (ie nonexistant files)
+- js stuff in index.html into bundle, w/ esbuild
+- custom stdlib as extra js file, `/api/stdlib.js`, add in export
+
+## TODO
+
 - [ ] import local notebooks
   - gists?
   - github files

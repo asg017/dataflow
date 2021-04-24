@@ -21,7 +21,6 @@
       * {
         box-sizing: border-box;
         margin: 0;
-        padding: 0;
         text-rendering: geometricPrecision;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
@@ -44,7 +43,7 @@
       code {
         font-family: var(--font-monospace);
       }
-      #container {
+      #dataflow-container {
         margin: 3rem auto;
         max-width: 900px;
         overflow: hidden;
@@ -64,7 +63,7 @@
       body {
         margin: 0;
       }
-      .footer-status {
+      .dataflow-footer-status {
         position: fixed;
         bottom: 0;
         left: 0;
@@ -73,7 +72,7 @@
         height: 1.5rem;
         font-weight: 600;
       }
-      .error-syntax {
+      .dataflow-error-syntax {
         position: fixed;
         bottom: 0;
         right: 0px;
@@ -85,15 +84,16 @@
         transition: opacity 0.5s ease-in-out;
         transition: right 0.5s ease-in-out;
       }
-      .error-syntax.hidden {
+      .dataflow-error-syntax.hidden {
         opacity: 0;
         right: -450px;
       }
     </style>
-    <!--<link
+    <!---->
+    <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.css"
-    />-->
+    />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/a11y-light.css"
@@ -102,9 +102,9 @@
     />
   </head>
   <body>
-    <div id="container" class="markdown-body"></div>
-    <div class="footer-status"></div>
-    <div class="error-syntax hidden"></div>
+    <div id="dataflow-container" class="markdown-body"></div>
+    <div class="dataflow-footer-status"></div>
+    <div class="dataflow-error-syntax hidden"></div>
     <script>
       ||STDLIB_INJECT||
     </script>
@@ -121,13 +121,9 @@
       } from "https://cdn.jsdelivr.net/npm/@alex.garcia/unofficial-observablehq-compiler@0.6.0-alpha.4/dist/index-esm.js";
 
       async function resolveImportPath(name) {
-        if (name.startsWith("https://observablehq.com")) {
-          const u = new URL(name);
-          return import(
-            `https://api.observablehq.com${u.pathname}.js?v=3`
-          ).then((m) => m.default);
-        }
-        return import(`/api/local-import/${name}`).then((m) => m.default);
+        return import(`/api/import?name=${encodeURIComponent(name)}`).then(
+          (m) => m.default
+        );
       }
 
       function computeLibrary() {
@@ -211,8 +207,8 @@
 
       const cellMap = new Map();
 
-      const container = document.querySelector("#container");
-      const errContainer = document.querySelector(".error-syntax");
+      const container = document.querySelector("#dataflow-container");
+      const errContainer = document.querySelector(".dataflow-error-syntax");
       const observer = Inspector.into(container);
 
       const library = computeLibrary();
@@ -365,7 +361,7 @@
         }
       }
 
-      const statusFooter = document.querySelector(".footer-status");
+      const statusFooter = document.querySelector(".dataflow-footer-status");
 
       function connect() {
         const socket = new WebSocket("ws://localhost:8080", "echo-protocol");

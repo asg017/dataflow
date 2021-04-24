@@ -19,6 +19,10 @@ function parseSecrets(values) {
   return secrets;
 }
 
+// TODO
+// 1) add allow-file-attachments permission flag
+// 2) add stdlib option (if possible)
+// 3) addd tree shaking flag --tree-shake "a,b,viewof c"
 program
   .version(require("../package.json").version)
   .command("export <notebook> <outfile>")

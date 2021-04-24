@@ -14,8 +14,11 @@
   "files": [
     "src/*"
   ],
+  "scripts": {
+    "docs": "rm -rf ./docs/out && ./src/dataflow export ./docs/index.ojs ./docs/out"
+  },
   "dependencies": {
-    "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.5",
+    "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.7",
     "chokidar": "^3.5.1",
     "commander": "^7.1.0",
     "js-yaml": "^4.0.0",
@@ -23,5 +26,8 @@
     "open": "^8.0.2",
     "rw": "^1.3.3",
     "websocket": "^1.0.33"
+  },
+  "devDependencies": {
+    "esbuild": "^0.11.14"
   }
 }

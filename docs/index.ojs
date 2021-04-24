@@ -1,0 +1,255 @@
+md`# Dataflow` 
+
+html`<style> #dataflow-container {
+    width: 100%;
+    max-width: 100%;
+
+}`
+
+html`<div class=container>
+    ${toc()}
+    <div class=content>
+        ${pages[currentI]()}
+    </div>
+</div>`
+
+md`---`
+
+//content = pages[currentI]()
+
+md`---`
+
+mutable currentI = 0
+
+intro = () => md`## Introduction
+
+`
+
+import {content as quickstart} from "./quickstart.ojs";
+
+
+ojs = () => md`## .ojs Files
+
+In Dataflow, you work with .ojs files, which has a similar vibe as JavaScript, but with key differences. If you copy+paste the cells found in Observable notebooks at observablehq.com into a new file by itself, then that would be an .ojs file!
+
+Here's an example .ojs file:
+
+~~~javascript
+// example.ojs
+
+viewof a = html\`<input type=number value=20>\`
+
+b = 2
+
+c = a + b
+
+everySecond = {
+    let i = 0;
+    while(true) {
+        yield Promises.delay(1000, ++i)
+    }
+}
+
+md\`It's been \${everySecond} seconds since everySecond has started.\`
+~~~
+
+<br/>
+
+Cells are written one after the other, where the entire \`example.ojs\` file is analagous to a single Observable notebook.
+
+Just like observablehq.com, Dataflow uses the [Observable notebook Standard Library](https://github.com/observablehq/stdlib), so cells like \`Promises\`, \`html\`, \`md\`, \`require\`, and more all are builtin by default. \`viewof\` and \`mutable\` cells are also supported.
+
+One key difference with observablehq.com: The builtin cells for \`html\` and \`svg\` use [@observablehq/htl](https://github.com/observablehq/htl) instead. This means that not all notebooks found on observablehq.com will work when importing from Dataflow, but the API is similar enough to make upgrades only take a few minutes.
+
+
+
+See [Observable’s not JavaScript](https://observablehq.com/@observablehq/observables-not-javascript) for a clearer look at what makes Observable syntax different from JavaScript.
+
+`
+
+stdlib = () => md`## Custom Standard Libraries
+
+### Constant Values
+
+### Dynamic/Dependencies`
+
+fileattachments = ()=>md`## File Attachments
+
+Filesystem access from a Dataflow instance is possible! You'll have to explicitly allow access from the \`dataflow run\` command:
+
+~~~bash
+dataflow run example.ojs --allow-file-attachments
+~~~
+
+Inside \`example.ojs\`, you will define allowed FileAttachments in a configuration comment at the very top. For example:
+
+~~~javascript
+/*
+FileAttachments:
+  a.txt: ./path/to/a.txt
+  image.png: ./path/to/image.png
+*/
+
+a = FileAttachment("a.txt").text();
+
+md\`Contents of a.txt: \${a}\`;
+
+img = FileAttachment("image.png").image();
+~~~
+
+The top comment must be a \`/* ... */\` style comment, where the body is a YAML object, with a single key \`FileAttachments\`, which defines an object where the keys are the "API-friendly" name of a file attachment, and the values are the path relative to the \`.ojs\` file of the FileAttachment.
+`
+
+secrets = ()=>md`## Secrets
+
+Secrets can be passed in from the \`dataflow run\` CLI as well. Keep in mind, there's no encryption or anything fancy going on with Secrets, think of them as a simple way to avoid writing secrets directly in source code.
+
+~~~bash
+dataflow run example.ojs --allow-secrets --secret API_TOKEN:$API_TOKEN --secret PASSWORD:hunter2
+~~~
+
+~~~javascript
+// contents of the API_TOKEN environment  variable
+apiToken = Secret("API_TOKEN");
+
+// "hunter2"
+password = Secret("PASSWORD");
+~~~
+
+One key difference here from observablehq Secrets: a \`Secret("key")\` call returns a Promise, not the secret directly.
+
+Secrets are not supported when compiling notebooks with \`dataflow export\`.
+`
+
+importing = ()=>md`## Importing notebooks
+
+### Local \`.ojs\` files
+
+
+Local \`.ojs\` files can be imported! They will be compiled to ES modules ✨on the fly✨.
+
+~~~javascript
+// submodule.ojs
+
+d3 = require("d3-array", "d3-random");
+
+n = 10;
+
+chart = svg\`<svg width=100 height=100>
+\${d3
+  .range(n)
+  .map(
+    (d) =>
+      svg\`<circle r=2 fill=pink cx=\${d3.randomUniform(
+        100
+      )()} cy=\${d3.randomUniform(100)()}>\`
+  )}\`;
+~~~
+
+In another file:
+
+~~~javascript
+// main.ojs
+n = html\`<input type=range value=15 min=1 max=50>\`
+
+import {chart} with {n} from "submodule.ojs"
+
+chart
+~~~
+
+~~~bash
+dataflow run main.ojs
+~~~
+
+### observablehq.com Notebooks
+
+Import with the notebook's full URL. Note that \`"@d3/bar-chart"\` alone wouldn't work, the full link \`"https://observablehq.com/@d3/bar-chart"\` works.
+
+~~~javascript
+viewof color = html\`<input type=color value="#c8ce57">\`
+
+import {chart} with {color} from "https://observablehq.com/@d3/bar-chart"
+
+import {Checkbox} from "https://observablehq.com/@observablehq/input-checkbox"
+
+viewof selection = Checkbox(["Alameda", "Alpine" ,"Los Angeles", "San Diego"])
+
+~~~
+
+Note that because of differences between Dataflow's and observablehq's standard library, notebooks that rely on the old \`html\` builtin variables may behave differently in Dataflow. For example, the [\`@jashkenas/inputs\`](https://observablehq.com/@jashkenas/inputs) notebook uses the old \`html\` cell in a backward incompatible way, so it can't be imported cleanly. An alternative is [\`@observablehq/inputs\`](https://observablehq.com/@observablehq/inputs), or see [issue #2](https://github.com/asg017/dataflow/issues/2) for more workarounds.`
+
+compiling = () => md`## Compiling Notebooks
+
+Your \`.ojs\` files can be compiled to ES modules for easier integrations with other technologies, similar to the [Advanced Embedding and Downloading
+](https://observablehq.com/@observablehq/downloading-and-embedding-notebooks) working on observablehq.com. These compiled files could be inclued in other projects like React apps, SPAs, or any of place the web can reach.
+
+### Standalone JS Files
+
+
+
+### FileAttachments
+
+
+### Custom Standard Libraries
+
+
+
+### Secrets`
+
+pages = [intro, quickstart, ojs, stdlib, fileattachments, secrets, importing, compiling]
+
+function toc() {
+    return html`<ul class="toc">
+    ${pages.map((p,i)=>{
+        const page = p();
+        function onClick(){
+            mutable currentI = i;
+        }
+        const header = (page.querySelector("h2") || page).textContent;
+        console.log(page);
+        const subs = Array.from(page.querySelectorAll("h3")).map(d=>d.textContent);
+    
+        return html`<li class="toc-item toc-item-${i}" onClick=${onClick}>
+        <span class=head>${header}</span>
+        <ul class="toc-sub">
+            ${subs.map(s=>html`<li>${s}`)}
+        </ul>
+    </li>` 
+    })}
+    </ul>`
+    }
+
+styleToc = html`<style>
+.toc-item-${currentI} {
+    color: purple;
+}`
+
+
+style = html`<style>
+.container {
+    display: grid; 
+    grid-template-columns: 300px auto;
+    grid-gap: 1rem;
+}
+.toc {
+    border-right: 1px solid #ccc;
+}
+.toc-sub {
+    font-size: .95rem;
+    padding: 0;
+}
+.toc-item {
+    font-size: 1.1rem;
+    cursor: pointer;
+}
+.toc-item .head {
+    font-weight: 600;
+}
+.toc li:hover {
+    background-color: lavender;
+}
+.content {
+    max-width: 48rem;
+    margin: 0 auto;
+}`
+//import {content as quickstart} from "./quickstart.ojs"

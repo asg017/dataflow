@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@alex.garcia/unofficial-observablehq-compiler@0.6.0-alpha.5":
-  version "0.6.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/@alex.garcia/unofficial-observablehq-compiler/-/unofficial-observablehq-compiler-0.6.0-alpha.5.tgz#d4f1f06958be35f0aac1f57b95b4b7c4325d0b91"
-  integrity sha512-q//mlo1mMs3ZwOCjuvy7r9t2gFzudXT9fRaA68NQW1HRv+q7Snj1ABOF6U0MF0213dJKFZ9TZJ32iqTbBohxuA==
+"@alex.garcia/unofficial-observablehq-compiler@0.6.0-alpha.7":
+  version "0.6.0-alpha.7"
+  resolved "https://registry.yarnpkg.com/@alex.garcia/unofficial-observablehq-compiler/-/unofficial-observablehq-compiler-0.6.0-alpha.7.tgz#ea546b967edeb173273b691bbf4f1e891f1837c8"
+  integrity sha512-Z6bNvrFMbbV4p1NpL0LcErk/15eQ1R+BOwmrFnJevkCF9vyIIUXhIx8n8yoHz9HGDl4VXlEuqgBqqqJVJ5sPjw==
   dependencies:
     "@observablehq/parser" "4.2"
     acorn-walk "^7.0.0"
@@ -125,6 +125,11 @@ es6-symbol@^3.1.1, es6-symbol@~3.1.3:
   dependencies:
     d "^1.0.1"
     ext "^1.1.2"
+
+esbuild@^0.11.14:
+  version "0.11.14"
+  resolved "https://registry.yarnpkg.com/esbuild/-/esbuild-0.11.14.tgz#0f4beba211d6d23e2825f61a89ccff1eef96361b"
+  integrity sha512-ejheEPkqhq5y0LM9rG9e+3yDihPtqeeE4NZmG7VQiSGJ3CjO4HvPOHmhhttSksfSztjLAGo2+0/zSIvlqj4JOQ==
 
 ext@^1.1.2:
   version "1.4.0"

@@ -1,0 +1,17 @@
+content = () => md`
+## Quickstart + installation
+
+Dataflow is a program that you install on your computer and use on the command line. \`dataflow run\` will start a dev sever that enable a live editing experience for your \`.ojs\` notebook files, and \`dataflow export\` will compile thise files into re-usable JavaScript ES modules for use in other projects.
+
+### Install
+
+~~~bash
+npm install @alex.garcia/dataflow
+
+dataflow --help
+
+# Alternatively, yarn.
+
+yarn add @alex.garcia/dataflow
+~~~
+`;

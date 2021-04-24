@@ -1,0 +1,11 @@
+/*
+FileAttachments:
+    f1: ./data/sub/f1
+    f2: ./data/sub/f2
+*/
+
+f1 = FileAttachment("f1").text();
+
+f2 = FileAttachment("f2").text();
+
+content = f1 + f2;

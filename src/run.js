@@ -11,6 +11,7 @@ const { resolve, dirname, join } = require("path");
 const yaml = require("js-yaml");
 const crypto = require("crypto");
 const open = require("open");
+const url = require("url");
 
 function sha256(s) {
   const shasum = crypto.createHash("sha256");
@@ -18,19 +19,44 @@ function sha256(s) {
   return shasum.digest("hex");
 }
 
-async function handleLocalImport(request, response, notebookPath) {
+function isObservableImport(path) {
+  if (path.startsWith("https")) {
+    const url = new URL(path);
+    // beta, next, api subdomains
+    if (url.hostname.endsWith("observablehq.com")) {
+      return `https://api.observablehq.com${url.pathname}.js?v=3`;
+    }
+  }
+  return false;
+}
+
+async function handleLocalImport(request, response, notebookPath, port) {
+  const name = url.parse(request.url, true).query.name;
+
+  if (isObservableImport(name)) {
+    const destination = isObservableImport(name);
+    response.writeHead(302, {
+      Location: destination,
+    });
+    response.end();
+    return;
+  }
+
+  // compiler only for local .ojs compiling
   const compile = new Compiler({
-    resolveImportPath: (path) =>
-      `http://localhost:8080/api/local-import/${path}`,
+    resolveImportPath: (path) => {
+      if (isObservableImport(path)) return isObservableImport(path);
+      return `http://localhost:${port}/api/import?name=${path}`;
+    },
   });
-  const importFile = request.url.slice("/api/local-import/".length);
-  const importFilePath = resolve(dirname(notebookPath), importFile);
-  console.log(importFilePath);
+  
+  // else assume its an .ojs thing
+  const importFilePath = resolve(dirname(notebookPath), name);
   response.writeHead(200, {
     "Content-Type": "text/javascript",
     "Access-Control-Allow-Origin": "*",
   });
-  return response.end(await compile.module(readFileSync(importFilePath)));
+  return response.end(compile.module(readFileSync(importFilePath)));
 }
 
 async function handleApiFileAttachment(
@@ -138,7 +164,7 @@ function runServer(params = {}) {
       .catch((err) => console.error("err reading path", err));
   });
   const server = http.createServer(function (request, response) {
-    console.log(`${Date.now()} Received request ${request.url}`);
+    console.log(`${Date.now()} ${request.method} ${request.url}`);
     if (request.method === "GET" && request.url === "/") {
       response.writeHead(200);
       indexHTML = readFileSync(
@@ -150,8 +176,8 @@ function runServer(params = {}) {
       );
       return response.end(indexHTML);
     }
-    if (request.method === "GET" && request.url.startsWith("/api/local-import"))
-      return handleLocalImport(request, response, notebookPath);
+    if (request.method === "GET" && request.url.startsWith("/api/import"))
+      return handleLocalImport(request, response, notebookPath, port);
     if (request.method === "GET" && request.url.startsWith("/api/local-fa"))
       return handleApiFileAttachment(
         request,
@@ -215,4 +241,5 @@ function runServer(params = {}) {
 
 module.exports = {
   runServer,
+  extractHeader,
 };

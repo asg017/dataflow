@@ -1,0 +1,23 @@
+/*
+FileAttachments:
+    x: ./data/x
+    y: ./data/y
+*/
+
+md`
+# test/export: top.ojs
+`;
+
+import { a } from "./a.ojs";
+
+import { b } from "./b.ojs";
+
+import { content } from "./sub_with_fa.ojs";
+
+c = a + b;
+
+x = FileAttachment("x").text();
+
+y = FileAttachment("y").text();
+
+content;
