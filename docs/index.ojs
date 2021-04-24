@@ -6,7 +6,7 @@ html`<style> #dataflow-container {
 
 }`
 
-html`<div class=container>
+content = html`<div class=container>
     ${toc()}
     <div class=content>
         ${pages[currentI]()}
@@ -219,7 +219,7 @@ function toc() {
     </ul>`
     }
 
-styleToc = html`<style>
+styleTOC = html`<style>
 .toc-item-${currentI} {
     color: purple;
 }`

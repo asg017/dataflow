@@ -15,12 +15,16 @@
     "src/*"
   ],
   "scripts": {
-    "docs": "rm -rf ./docs/out && ./src/dataflow export ./docs/index.ojs ./docs/out"
+    "docs": "rm -rf ./docs/out && ./src/dataflow export ./docs/index.ojs ./docs/out --target content --target style --target styleTOC",
+    "build-client": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm",
+    "watch-client": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm --watch"
   },
   "dependencies": {
     "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.7",
+    "@observablehq/runtime": "^4.8.2",
     "chokidar": "^3.5.1",
     "commander": "^7.1.0",
+    "htl": "^0.2.5",
     "js-yaml": "^4.0.0",
     "node-fetch": "^2.6.1",
     "open": "^8.0.2",

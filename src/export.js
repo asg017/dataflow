@@ -1,12 +1,20 @@
+const crypto = require("crypto");
+const { mkdirSync, copyFileSync } = require("fs");
+const path = require("path");
+
 const {
   Compiler,
   parser,
 } = require("@alex.garcia/unofficial-observablehq-compiler");
 const { readFileSync, writeFileSync } = require("rw").dash;
-const { mkdirSync, copyFileSync } = require("fs");
+
 const { extractHeader } = require("./run");
 
-const path = require("path");
+function sha256(s) {
+  const shasum = crypto.createHash("sha256");
+  shasum.update(s);
+  return shasum.digest("hex");
+}
 
 /*
 1. export to a directory
@@ -57,15 +65,23 @@ function isObservablehq(name) {
   return name.startsWith("https://observablehq.com");
 }
 
-function resolveImportPath(name) {
-  if (isObservablehq(name)) {
-    const u = new URL(name);
-    return `https://api.observablehq.com${u.pathname}.js?v=3`;
-  }
-  return name.replace(".ojs", ".js");
-}
-
+/*
+  files/
+    /cae64a86c5e4
+    /939eace82398
+    /bb8c4ae83948
+  index.html
+  index.js            -- re-export whatever is target notebook
+  stdlib.js           -- any passed in stdlib file
+  core.js             -- client/core, defines runtime, stdlib
+  aca987ca987.js      -- imported notebook #1 (as sha, not file name)
+  ba7c5a6756d.js      -- imported notebook #2
+  ...
+  c320e8a7c8e.js      -- imported notebook #n
+  */
 async function exportNotebook(inPath, outDir, options) {
+  const { stdlibPath, target = [] } = options;
+
   mkdirSync(outDir);
 
   // will add on any absolute .ojs files to this array
@@ -125,6 +141,35 @@ async function exportNotebook(inPath, outDir, options) {
     ojsFiles.push(current);
   }
 
+  const ojsFilesResolved = new Map();
+  for (const ojsFile of ojsFiles) {
+    const sha = sha256(readFileSync(ojsFile, "utf8"));
+    ojsFilesResolved.set(ojsFile, `${sha}.js`);
+  }
+
+  function resolveImportPath(name) {
+    if (isObservablehq(name)) {
+      const u = new URL(name);
+      return `https://api.observablehq.com${u.pathname}.js?v=3`;
+    }
+
+    // TODO one problem:
+    // here, this is where the notebook imported from a local .ojs file.
+    // we want to resolve to the sha name of the file,
+    // which ojsFilesResolved has, but ojsFilesResolved has
+    // the absolute path of the ojs file, NOT the relative
+    // path that we get here in resolveImportPath.
+    // as a workaround, we can filter and find the first one
+    // in that map that ends in this relative name, but
+    // im sure theres a few breaking cases that will need to be fixed.
+    const key = Array.from(ojsFilesResolved.keys()).find((absPath) =>
+      absPath.endsWith(`/${name.replace(/^\.\//, "")}`)
+    );
+    console.log(name, key, ojsFilesResolved);
+
+    return `./${ojsFilesResolved.get(key)}`;
+  }
+
   function resolveFileAttachments(name) {
     const d = fileAttachments.find((d) => d.refName === name);
     if (!d) return `""`;
@@ -146,10 +191,7 @@ async function exportNotebook(inPath, outDir, options) {
     const sourceCode = readFileSync(ojsFile);
     const esmSource = await compile.module(sourceCode);
 
-    // TODO use SHA hash instead of ojs file name
-    const target = path
-      .join(outDir, path.basename(ojsFile))
-      .replace(".ojs", ".js");
+    const target = path.join(outDir, ojsFilesResolved.get(ojsFile));
     writeFileSync(target, esmSource, "utf8");
   }
   // for any file attachments, write them to files subdirectory
@@ -160,7 +202,21 @@ async function exportNotebook(inPath, outDir, options) {
       copyFileSync(fa.path, path.join(outDir, "files", path.basename(fa.path)));
     }
   }
-  const top = path.basename(ojsFiles[0]).replace(".ojs", ".js");
+  const top = ojsFilesResolved.get(ojsFiles[0]);
+
+  copyFileSync(
+    path.join(__dirname, "content", "core.js"),
+    path.join(outDir, "core.js")
+  );
+
+  writeFileSync(
+    path.join(outDir, "index.js"),
+    `export {default} from "./${top}";`
+  );
+
+  if (stdlibPath) copyFileSync(stdlibPath, path.join(outDir, "stdlib.js"));
+  else writeFileSync(path.join(outDir, "stdlib.js"), "", "utf8");
+
   writeFileSync(
     path.join(outDir, "index.html"),
     `<!DOCTYPE html>
@@ -170,20 +226,16 @@ async function exportNotebook(inPath, outDir, options) {
   </head>
   <body>
   <script type="module">
-  import {Runtime, Library, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
-  import {html, svg} from "https://cdn.skypack.dev/htl";
-  import define from "./${top}";
-
-  const library = Object.assign(
-      new Library(),
-      {
-        html: () => html,
-        svg: () => svg,
-      }
-  );
-  
-  const runtime = new Runtime(library);
-  const main = runtime.module(define, Inspector.into(document.body));
+  import {Runtime, Library, Inspector} from "./core.js";
+  import define from "./index.js";
+  const runtime = new Runtime(new Library());
+  const target = new Set(${JSON.stringify(target)});
+  const observer = target.size > 0 
+  ? name => {
+    if(target.has(name)) return new Inspector(document.body.appendChild(document.createElement("div")));
+  }
+  : Inspector.into(document.body);
+  const main = runtime.module(define, observer);
   
   </script>`,
     "utf8"

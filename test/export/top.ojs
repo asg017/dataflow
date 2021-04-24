@@ -14,6 +14,8 @@ import { b } from "./b.ojs";
 
 import { content } from "./sub_with_fa.ojs";
 
+import { name } from "https://observablehq.com/@tmcw/hello-world";
+
 c = a + b;
 
 x = FileAttachment("x").text();
@@ -21,3 +23,5 @@ x = FileAttachment("x").text();
 y = FileAttachment("y").text();
 
 content;
+
+name;

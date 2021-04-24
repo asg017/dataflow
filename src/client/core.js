@@ -1,12 +1,8 @@
 import { html, svg } from "htl";
-import {
-  Runtime,
-  RuntimeError,
-  Inspector,
-  Library as BaseLibrary,
-} from "@observablehq/runtime";
+import { Library as BaseLibrary } from "@observablehq/runtime";
 
-// both
+export { Runtime, Inspector } from "@observablehq/runtime";
+
 export function Library() {
   if (!window.OJS_STDLIB) window.OJS_STDLIB = { constants: {}, dependency: {} };
   if (!window.OJS_STDLIB.constants) window.OJS_STDLIB.constants = {};

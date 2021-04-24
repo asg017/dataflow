@@ -49,7 +49,7 @@ async function handleLocalImport(request, response, notebookPath, port) {
       return `http://localhost:${port}/api/import?name=${path}`;
     },
   });
-  
+
   // else assume its an .ojs thing
   const importFilePath = resolve(dirname(notebookPath), name);
   response.writeHead(200, {
@@ -167,14 +167,25 @@ function runServer(params = {}) {
     console.log(`${Date.now()} ${request.method} ${request.url}`);
     if (request.method === "GET" && request.url === "/") {
       response.writeHead(200);
-      indexHTML = readFileSync(
+      const indexHTML = readFileSync(
         join(__dirname, "content", "index.html"),
         "utf8"
-      ).replace(
-        "||STDLIB_INJECT||",
-        stdibPath ? readFileSync(stdibPath, "utf8") : ""
       );
       return response.end(indexHTML);
+    }
+    if (request.method === "GET" && request.url === "/run.js") {
+      response.writeHead(200, {
+        "Content-Type": "text/javascript",
+      });
+      const runJS = readFileSync(join(__dirname, "content", "run.js"), "utf8");
+      return response.end(runJS);
+    }
+    if (request.method === "GET" && request.url === "/stdlib.js") {
+      response.writeHead(200, {
+        "Content-Type": "text/javascript",
+      });
+      const stdlibJS = stdibPath ? readFileSync(stdibPath, "utf8") : "";
+      return response.end(stdlibJS);
     }
     if (request.method === "GET" && request.url.startsWith("/api/import"))
       return handleLocalImport(request, response, notebookPath, port);

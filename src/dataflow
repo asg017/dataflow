@@ -20,19 +20,23 @@ function parseSecrets(values) {
 }
 
 // TODO
-// 1) add allow-file-attachments permission flag
-// 2) add stdlib option (if possible)
-// 3) addd tree shaking flag --tree-shake "a,b,viewof c"
+// 1) add --allow-file-attachments permission flag
+// 2) add --stdlib path option
+// 3) add --tree-shake "a,b,viewof c"
+// 4) add --target "a,b,c" for index.html observing
 program
   .version(require("../package.json").version)
   .command("export <notebook> <outfile>")
   .description(
-    "Export a notebook to a standaline JS ES module or a HTML page. FileAttachments, Secrets, custom stdlib, and importing local .ojs files is NOT supported yet."
+    "Export a notebook to a directory containg compiled ES modules, File Attachments, runtime/stdlib JS files, and an example index.html."
   )
   .option(
-    "-f, --format <format>",
-    '"js" or "html", whether to compile to a javascript ES module or a standalone HTML page. Otherwise infered from output file path. ',
-    "js"
+    "--stdlib <path>",
+    "Path to JS file that the browser will execute as-is to add to the notebooks builtin variables."
+  )
+  .option(
+    "--target [cells...]",
+    "Array of cells to 'target' when embeding in the index.html file. Only these cells will be observed."
   )
   .action((inPath, outPath, options) => {
     exportNotebook(inPath, outPath, options);
