@@ -38,6 +38,10 @@ program
     "--target [cells...]",
     "Array of cells to 'target' when embeding in the index.html file. Only these cells will be observed."
   )
+  .option(
+    "--tree-shake [cells...]",
+    "Tree-shake the compiled output, keeping only cell defintions for the named 'cells' and any cell they depend on. Unused imports and FileAttachments will not be included."
+  )
   .action((inPath, outPath, options) => {
     exportNotebook(inPath, outPath, options);
   });

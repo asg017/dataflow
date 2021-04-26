@@ -7,7 +7,7 @@ const EventEmitter = require("events");
 const fetch = require("node-fetch");
 const { Compiler } = require("@alex.garcia/unofficial-observablehq-compiler");
 const { ModuleParser } = require("@observablehq/parser");
-const { resolve, dirname, join } = require("path");
+const path = require("path");
 const yaml = require("js-yaml");
 const crypto = require("crypto");
 const open = require("open");
@@ -31,38 +31,51 @@ function isObservableImport(path) {
 }
 
 async function handleLocalImport(request, response, notebookPath, port) {
-  const name = url.parse(request.url, true).query.name;
+  const q = url.parse(request.url, true).query;
+  const importPath = q.name;
+  let treeShake;
 
-  if (isObservableImport(name)) {
-    const destination = isObservableImport(name);
+  if (Array.isArray(q.cell)) treeShake = q.cell;
+  else if (q.cell) treeShake = [q.cell];
+
+  if (isObservableImport(importPath)) {
+    const destination = isObservableImport(importPath);
     response.writeHead(302, {
       Location: destination,
     });
-    response.end();
-    return;
+    return response.end();
   }
 
   // compiler only for local .ojs compiling
   const compile = new Compiler({
-    resolveImportPath: (path) => {
+    resolveImportPath: (path, specifiers) => {
       if (isObservableImport(path)) return isObservableImport(path);
-      return `http://localhost:${port}/api/import?name=${path}`;
+      return `http://localhost:${port}/api/import?name=${path}&${specifiers
+        .map((s) => `cell=${encodeURIComponent(s)}`)
+        .join("&")}`;
+    },
+    resolveFileAttachments: (name) => {
+      return `http://localhost:${port}/api/file-attachments?source=${encodeURIComponent(
+        path.resolve(path.dirname(notebookPath), importPath)
+      )}&name=${encodeURIComponent(name)}`;
     },
   });
 
-  // else assume its an .ojs thing
-  const importFilePath = resolve(dirname(notebookPath), name);
+  const importFilePath = path.resolve(path.dirname(notebookPath), importPath);
+  const source = readFileSync(importFilePath, "utf8");
+  const compiled = compile.module(source, { treeShake });
+
   response.writeHead(200, {
     "Content-Type": "text/javascript",
     "Access-Control-Allow-Origin": "*",
   });
-  return response.end(compile.module(readFileSync(importFilePath)));
+  return response.end(compiled);
 }
 
 async function handleApiFileAttachment(
   request,
   response,
-  fileAttachments,
+  notebookPath,
   allowFileAttachments
 ) {
   if (!allowFileAttachments) {
@@ -71,23 +84,29 @@ async function handleApiFileAttachment(
       "Pass in --allow-file-attachments to enable file system access."
     );
   }
-  const requestedFileAttachment = request.url.slice("/api/local-fa/".length);
-  if (fileAttachments.has(requestedFileAttachment)) {
-    const faContents = await readFile(
-      fileAttachments.get(requestedFileAttachment)
-    ).catch((e) => null);
+  const q = url.parse(request.url, true).query;
+  const name = q.name;
+  const source = q.source || notebookPath;
 
-    if (!faContents) {
-      response.writeHead(404);
-      return response.end();
-    }
-    response.writeHead(200);
-    return response.end(faContents);
+  const sourceCode = readFileSync(source, "utf8");
+  const header = extractHeader(sourceCode);
+  const faPath =
+    header && header.FileAttachments && header.FileAttachments[name];
+  if (!faPath) {
+    response.writeHead(404);
+    return response.end();
   }
-  response.writeHead(404);
-  return response.end(
-    `"${requestedFileAttachment}" not a valid file attachment.`
-  );
+  const faContents = await readFile(
+    path.resolve(path.dirname(source), faPath)
+  ).catch((e) => null);
+
+  if (!faContents) {
+    response.writeHead(404);
+    return response.end();
+  }
+
+  response.writeHead(200);
+  return response.end(faContents);
 }
 
 async function handleApiSecrets(request, response, secrets, allowSecrets) {
@@ -127,8 +146,6 @@ function runServer(params = {}) {
     secrets,
     allowSecrets,
   } = params;
-  // if FA is enabled, key=name of FA, value= absolute path to resolved file
-  const fileAttachments = new Map();
   const sourceEmitter = new EventEmitter();
   let lastMessage;
   sourceEmitter.on("update", (e) => (lastMessage = e));
@@ -136,29 +153,10 @@ function runServer(params = {}) {
   chokidar.watch(notebookPath).on("all", (event, path) => {
     readFile(path, "utf8")
       .then((source) => {
-        const header = extractHeader(source);
-        if (header && header.FileAttachments) {
-          fileAttachments.clear();
-          for (const [key, value] of Object.entries(header.FileAttachments)) {
-            fileAttachments.set(key, resolve(dirname(notebookPath), value));
-          }
-        }
         sourceEmitter.emit("update", {
           event,
           path,
           source,
-          // send the client the file attachment "name" as the key,
-          // and the endpoint + sha of file path. no need to give
-          // actual path (tho maybe im over-reacting)
-          fileAttachments: Array.from(fileAttachments.entries()).map(
-            ([k, v]) => [
-              k,
-              {
-                endpoint: `/api/local-fa/${k}`,
-                sha: sha256(v),
-              },
-            ]
-          ),
         });
       })
       .catch((err) => console.error("err reading path", err));
@@ -168,7 +166,7 @@ function runServer(params = {}) {
     if (request.method === "GET" && request.url === "/") {
       response.writeHead(200);
       const indexHTML = readFileSync(
-        join(__dirname, "content", "index.html"),
+        path.join(__dirname, "content", "index.html"),
         "utf8"
       );
       return response.end(indexHTML);
@@ -177,7 +175,10 @@ function runServer(params = {}) {
       response.writeHead(200, {
         "Content-Type": "text/javascript",
       });
-      const runJS = readFileSync(join(__dirname, "content", "run.js"), "utf8");
+      const runJS = readFileSync(
+        path.join(__dirname, "content", "run.js"),
+        "utf8"
+      );
       return response.end(runJS);
     }
     if (request.method === "GET" && request.url === "/stdlib.js") {
@@ -189,11 +190,14 @@ function runServer(params = {}) {
     }
     if (request.method === "GET" && request.url.startsWith("/api/import"))
       return handleLocalImport(request, response, notebookPath, port);
-    if (request.method === "GET" && request.url.startsWith("/api/local-fa"))
+    if (
+      request.method === "GET" &&
+      request.url.startsWith("/api/file-attachments")
+    )
       return handleApiFileAttachment(
         request,
         response,
-        fileAttachments,
+        notebookPath,
         allowFileAttachments
       );
 

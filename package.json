@@ -20,7 +20,7 @@
     "watch-client": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm --watch"
   },
   "dependencies": {
-    "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.7",
+    "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.9",
     "@observablehq/runtime": "^4.8.2",
     "chokidar": "^3.5.1",
     "commander": "^7.1.0",

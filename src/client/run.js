@@ -6,10 +6,12 @@ import {
 } from "@alex.garcia/unofficial-observablehq-compiler";
 import { Library } from "./core";
 
-async function resolveImportPath(name) {
-  return import(`/api/import?name=${encodeURIComponent(name)}`).then(
-    (m) => m.default
-  );
+async function resolveImportPath(name, specifiers) {
+  return import(
+    `/api/import?name=${encodeURIComponent(name)}&${specifiers
+      .map((s) => `cell=${encodeURIComponent(s)}`)
+      .join("&")}`
+  ).then((m) => m.default);
 }
 
 function defineSecret(name) {
@@ -31,10 +33,13 @@ function defineSecret(name) {
   });
 }
 
-// run
-function defineFileAttachment(runtime, fileAttachments) {
+// TODO re-add logic for live-refreshing when file attachments change
+// 1) when fa path changes, 2) when fa is added/deleted, 3) when fa file changes (hard)
+function defineFileAttachment(runtime) {
   return () =>
-    runtime.fileAttachments((name) => fileAttachments.get(name)?.endpoint);
+    runtime.fileAttachments(
+      (name) => `/api/file-attachments?name=${encodeURIComponent(name)}`
+    );
 }
 
 function main() {
@@ -53,9 +58,7 @@ function main() {
     observeViewofValues: false,
     observeMutableValues: false,
   });
-  const fileAttachments = new Map();
-
-  main.define("FileAttachment", defineFileAttachment(runtime, fileAttachments));
+  main.define("FileAttachment", defineFileAttachment(runtime));
   main.define("Secret", () => defineSecret);
 
   async function onMessage(event) {
@@ -91,39 +94,6 @@ function main() {
     // tmp map to add the "index" suffix to cellMap key
     const idMap = new Map();
     const newSourceCellMap = new Set();
-
-    if (m.fileAttachments) {
-      // if the new FAs have new keys, or updated values, update FA
-      let newFA = false;
-      // key=FA name, value=endpoint to get data
-      ///debugger;
-      for (const [key, value] of m.fileAttachments) {
-        if (
-          !fileAttachments.has(key) ||
-          fileAttachments.get(key).sha !== value.sha ||
-          fileAttachments.get(key).endpoint !== value.endpoint
-        ) {
-          fileAttachments.set(key, value);
-          newFA = true;
-        }
-      }
-
-      // if the old FA has any keys that have been delete, delete them
-      const tmpMFAmap = new Map(m.fileAttachments);
-      for (const [key, value] of fileAttachments) {
-        if (!tmpMFAmap.has(key)) {
-          fileAttachments.delete(key);
-          newFA = true;
-        }
-      }
-
-      if (newFA) {
-        main.redefine(
-          "FileAttachment",
-          defineFileAttachment(runtime, fileAttachments)
-        );
-      }
-    }
 
     for (const cell of parsedModule.cells) {
       const src = cell.input.substring(cell.start, cell.end);

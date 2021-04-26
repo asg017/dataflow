@@ -16,12 +16,18 @@ import { content } from "./sub_with_fa.ojs";
 
 import { name } from "https://observablehq.com/@tmcw/hello-world";
 
+import { one_cell } from "./ts-me.ojs";
+
 c = a + b;
 
 x = FileAttachment("x").text();
 
 y = FileAttachment("y").text();
 
+z = FileAttachment("z").text();
+
 content;
 
 name;
+
+one_cell;
