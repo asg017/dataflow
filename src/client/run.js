@@ -5,6 +5,7 @@ import {
   parser,
 } from "@alex.garcia/unofficial-observablehq-compiler";
 import { Library } from "./core";
+import { html } from "htl";
 
 async function resolveImportPath(name, specifiers) {
   return import(
@@ -53,6 +54,20 @@ function main() {
   const runtime = new Runtime(library);
 
   const main = runtime.module();
+
+  main.define("width", [], () => {
+    return library.Generators.observe((change) => {
+      change(null);
+      const ro = new ResizeObserver((entries) => {
+        for (let entry of entries) {
+          change(entry.contentRect.width);
+        }
+      });
+      ro.observe(container);
+      return () => ro.disconnect();
+    });
+  });
+
   const interpret = new Interpreter({
     resolveImportPath,
     observeViewofValues: false,
@@ -62,7 +77,7 @@ function main() {
   main.define("Secret", () => defineSecret);
 
   async function onMessage(event) {
-    console.log("received msg", event);
+    console.debug("DATAFLOW", "received msg", event);
     const m = JSON.parse(event.data);
     const source = m.source;
     let parsedModule;
@@ -78,17 +93,18 @@ function main() {
       errContainer.classList.remove("hidden");
 
       const sourceLines = source.split("\n");
-      errContainer.appendChild(htl.html`<div style="padding: .5rem;">
-              <div style="font-weight: 700; font-size: 1.2rem;">${
-                error.name
-              }</div>
-              <div style="margin: 1rem 0;">${error.message}</div>
-              <div style="background-color: rgba(220, 38, 38, .5);">
-                <span style="margin-right: .5rem; background-color: rgba(220, 38, 38, .6);">
-                  ${error.loc.line}
-                </span>
-              <code>${sourceLines[error.loc.line - 1]}</code>
-              </div>`);
+      errContainer.appendChild(html`<div style="padding: .5rem;">
+        <div style="font-weight: 700; font-size: 1.2rem;">${error.name}</div>
+        <div style="margin: 1rem 0;">${error.message}</div>
+        <div style="background-color: rgba(220, 38, 38, .5);">
+          <span
+            style="margin-right: .5rem; background-color: rgba(220, 38, 38, .6);"
+          >
+            ${error.loc.line}
+          </span>
+          <code>${sourceLines[error.loc.line - 1]}</code>
+        </div>
+      </div>`);
       return;
     }
     // tmp map to add the "index" suffix to cellMap key

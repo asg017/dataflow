@@ -13,18 +13,6 @@ export function Library() {
     {
       html: () => html,
       svg: () => svg,
-      width: () => {
-        return base.Generators.observe((change) => {
-          change(null);
-          const ro = new ResizeObserver((entries) => {
-            for (let entry of entries) {
-              change(entry.contentRect.width);
-            }
-          });
-          ro.observe(container);
-          return () => ro.disconnect();
-        });
-      },
     },
     window.OJS_STDLIB.constants
   );

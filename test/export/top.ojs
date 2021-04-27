@@ -8,15 +8,7 @@ md`
 # test/export: top.ojs
 `;
 
-import { a } from "./a.ojs";
-
-import { b } from "./b.ojs";
-
-import { content } from "./sub_with_fa.ojs";
-
-import { name } from "https://observablehq.com/@tmcw/hello-world";
-
-import { one_cell } from "./ts-me.ojs";
+width;
 
 c = a + b;
 
@@ -31,3 +23,13 @@ content;
 name;
 
 one_cell;
+
+import { a } from "./a.ojs";
+
+import { b } from "./b.ojs";
+
+import { content } from "./sub_with_fa.ojs";
+
+import { name } from "https://observablehq.com/@tmcw/hello-world";
+
+import { one_cell } from "./ts-me.ojs";

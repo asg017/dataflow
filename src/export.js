@@ -5,10 +5,12 @@ const path = require("path");
 const {
   Compiler,
   parser,
+  treeShakeModule,
 } = require("@alex.garcia/unofficial-observablehq-compiler");
 const { readFileSync, writeFileSync } = require("rw").dash;
 
 const { extractHeader } = require("./run");
+const { readFile } = require("rw/lib/rw/dash");
 
 function sha256(s) {
   const shasum = crypto.createHash("sha256");
@@ -65,7 +67,10 @@ function isObservablehq(name) {
   return name.startsWith("https://observablehq.com");
 }
 
-/*
+// TODO if multiple notebooks import the same notebook but tree-shake different cells, then that notebook will appear multiple times in the compiled output (1 slightly different compiled output for each unique tree-shaked version). We should instead find all imported .ojs files w/ specified cells, then group by unique .ojs file, then compile the file with treeshaking based on ALL specified cells.
+
+/* when complete, outDir's format:
+
   files/
     /cae64a86c5e4
     /939eace82398
@@ -79,50 +84,53 @@ function isObservablehq(name) {
   ...
   c320e8a7c8e.js      -- imported notebook #n
   */
+
+function ojsSHA(path, treeshake) {
+  const src = readFileSync(path);
+  const spec = treeshake ? "" : JSON.stringify(treeshake);
+  return sha256(src + spec);
+}
+
+/*
+TODO
+1) allow for single-file exports, .ojs to js, thats it. If import a local notebook, just warn and move on. 
+2) allow for glob/wildcard, ex:
+  dataflowc notebooks/* dist/
+3) allow to write to tar file (test if stdout works)
+*/
 async function exportNotebook(inPath, outDir, options) {
-  const { stdlibPath, target = [] } = options;
+  const { stdlibPath, target = [], treeShake = null } = options;
+  let top;
 
   mkdirSync(outDir);
 
-  // will add on any absolute .ojs files to this array
-  const todo = [path.resolve(inPath)];
+  // sha used as filename, "${sha}.js"
+  const todo = [
+    { path: path.resolve(inPath), treeShake, sha: ojsSHA(inPath, treeShake) },
+  ];
 
-  // all of the local .ojs files that are imported from the inPath notebook
-  // (or its dependencies) that need to be bundled in.
-  // value: string, absolute path to ojs file.
-  const ojsFiles = [];
-
-  // all of the fileAttachments that are references in the inPath notebook
-  // (or in any dependency .ojs notebooks) that need to be bundled in.
-  // value: object, {refName: string FA name, path: string absolute path  }
-  const fileAttachments = [];
+  // only create "./files" directory if there are FAs.
+  let hasFA = false;
 
   // TODO detect recursion. probably a done = new Set() that gets checked
   while (todo.length) {
     const current = todo.pop();
-    // .ojs contents
-    const sourceCode = readFileSync(current);
-    const module = parser.parseModule(sourceCode);
+
+    // keep track of what import points to which file (sha) for resolveImportPath
+    // the key is awkward, `${name}${JSON.stringify(specifiers)}`
+    const currentImports = new Map();
+
+    // keep track of what FAs are written for resolveFileAttachments
+    const writtenFAs = new Map();
+
+    const sourceCode = readFileSync(current.path);
+
+    let module = parser.parseModule(sourceCode);
+    if (current.treeShake) module = treeShakeModule(module, current.treeShake);
 
     const header = extractHeader(sourceCode);
 
-    // go through all cells to find reference file attachments.
-    for (const cell of module.cells) {
-      if (!cell.fileAttachments.size) continue;
-
-      if (!header)
-        throw Error(
-          "Cells reference FileAttachments, but a header that defines FileAttachment locations could not be found."
-        );
-
-      for (const [ref, relPath] of Object.entries(header.FileAttachments)) {
-        fileAttachments.push({
-          refName: ref,
-          path: path.resolve(path.dirname(current), relPath),
-        });
-      }
-    }
-
+    // get all .ojs imports and add to todo
     const importCells = module.cells.filter(
       (cell) => cell.body.type === "ImportDeclaration"
     );
@@ -133,93 +141,98 @@ async function exportNotebook(inPath, outDir, options) {
       // and include in bundle to make it work offline.
       if (isObservablehq(name)) continue;
 
-      // TODO for tree shaking, push the specified imported cells as well.
-      todo.push(path.resolve(path.dirname(current), name));
-    }
-    // TODO push on import specifiers here for tree shaking.
-    // for the first one, use CLI params
-    ojsFiles.push(current);
-  }
+      const ojsPath = path.resolve(path.dirname(current.path), name);
 
-  const ojsFilesResolved = new Map();
-  for (const ojsFile of ojsFiles) {
-    const sha = sha256(readFileSync(ojsFile, "utf8"));
-    ojsFilesResolved.set(ojsFile, `${sha}.js`);
-  }
+      const specifiers = importCell.body.specifiers.map((d) => {
+        const prefix = d.view ? "viewof " : d.mutable ? "mutable " : "";
+        return `${prefix}${d.imported.name}`;
+      });
 
-  const fileAttachmentSHAs = new Map();
-  for (const fa of fileAttachments) {
-    if (
-      fileAttachmentSHAs.has(fa.refName) &&
-      fileAttachmentSHAs.get(fa.refName).path !== fa.path
-    )
-      console.warn(
-        "Warning: Multiple FileAttachments contain the same name, which might clash with each other. This will be fixed in a future Dataflow release."
-      );
-    const sha = sha256(readFileSync(fa.path));
-    fileAttachmentSHAs.set(fa.refName, { sha, path: fa.path });
-  }
+      const sha = ojsSHA(ojsPath, specifiers);
 
-  function resolveImportPath(name) {
-    if (isObservablehq(name)) {
-      const u = new URL(name);
-      return `https://api.observablehq.com${u.pathname}.js?v=3`;
+      currentImports.set(`${name}${JSON.stringify(specifiers)}`, sha);
+      todo.push({
+        path: ojsPath,
+        treeShake: specifiers,
+        sha,
+      });
     }
 
-    // TODO one problem:
-    // here, this is where the notebook imported from a local .ojs file.
-    // we want to resolve to the sha name of the file,
-    // which ojsFilesResolved has, but ojsFilesResolved has
-    // the absolute path of the ojs file, NOT the relative
-    // path that we get here in resolveImportPath.
-    // as a workaround, we can filter and find the first one
-    // in that map that ends in this relative name, but
-    // im sure theres a few breaking cases that will need to be fixed.
-    const key = Array.from(ojsFilesResolved.keys()).find((absPath) =>
-      absPath.endsWith(`/${name.replace(/^\.\//, "")}`)
+    // go through all cells to find reference file attachments.
+    const referencedFileAttachments = new Set(
+      module.cells
+        .filter((cell) => cell.fileAttachments.size)
+        .reduce((a, cell) => {
+          return a.concat(Array.from(cell.fileAttachments.keys()));
+        }, [])
     );
-    return `./${ojsFilesResolved.get(key)}`;
-  }
+    const definedFileAttachments = new Map(
+      Object.entries(
+        (header && header.FileAttachments) || {}
+      ).map(([name, relPath]) => [
+        name,
+        path.resolve(path.dirname(current.path), relPath),
+      ])
+    );
 
-  function resolveFileAttachments(name) {
-    const d = fileAttachmentSHAs.get(name);
-    if (!d) return `""`;
-    return `new URL("./files/${d.sha}", import.meta.url)`;
-  }
+    // we only will copy over referenced FA's, since others may have been tree shaken out/ never used
+    for (const refFA of referencedFileAttachments) {
+      if (!definedFileAttachments.has(refFA)) {
+        console.warn(
+          `WARNING: A FileAttachment "${refFA}" was referenced in ${current.path}, but is not defined in the header of the file.`
+        );
+        continue;
+      }
 
-  const compile = new Compiler({
-    resolveImportPath,
-    resolveFileAttachments,
-    defineImportMarkdown: false,
-    observeViewofValues: false,
-    observeMutableValues: false,
-    UNSAFE_allowJavascriptFileAttachments: true,
-  });
+      if (!hasFA) {
+        hasFA = true;
+        mkdirSync(path.join(outDir, "files"));
+      }
 
-  // for any local .ojs file, write them to directory
-  for (const ojsFile of ojsFiles) {
-    const sourceCode = readFileSync(ojsFile);
+      const pathFA = definedFileAttachments.get(refFA);
+      // TODO dont read file in memory
+      const sha = sha256(readFileSync(pathFA));
 
-    // TODO to truly avoid conflicts, i think we'll need a new compiler
-    // for every individual .ojs file thats spefic to that ojs file.
-    // to ensure file attachments an importe js files with the same
-    // name don't clash.
-    const esmSource = await compile.module(sourceCode);
+      copyFileSync(pathFA, path.join(outDir, "files", sha));
+      writtenFAs.set(refFA, sha);
+    }
 
-    const target = path.join(outDir, ojsFilesResolved.get(ojsFile));
+    function resolveImportPath(name, specifiers) {
+      if (isObservablehq(name)) {
+        const u = new URL(name);
+        return `https://api.observablehq.com${u.pathname}.js?v=3`;
+      }
+      const ojsSHA = currentImports.get(`${name}${JSON.stringify(specifiers)}`);
+      return `./${ojsSHA}.js`;
+    }
+    function resolveFileAttachments(name) {
+      const d = writtenFAs.get(name);
+      // ensure FA fetch if no cooresponding FA, NOT `""`
+      if (!d) return `null`;
+      return `new URL("./files/${d}", import.meta.url)`;
+    }
+
+    const compile = new Compiler({
+      resolveImportPath,
+      resolveFileAttachments,
+      defineImportMarkdown: false,
+      observeViewofValues: false,
+      observeMutableValues: false,
+      UNSAFE_allowJavascriptFileAttachments: true,
+    });
+    const esmSource = compile.module(module);
+    const target = path.join(outDir, current.sha + ".js");
+
+    console.log(
+      "Writing compiled output for",
+      current.path,
+      current.treeShake,
+      "to",
+      target
+    );
+    if (!top) top = path.basename(target);
     writeFileSync(target, esmSource, "utf8");
   }
-  // for any file attachments, write them to files subdirectory
-  if (fileAttachments.length) {
-    mkdirSync(path.join(outDir, "files"));
-    for (const fa of fileAttachments) {
-      copyFileSync(
-        fa.path,
-        path.join(outDir, "files", fileAttachmentSHAs.get(fa.refName).sha)
-      );
-    }
-  }
-  const top = ojsFilesResolved.get(ojsFiles[0]);
 
   copyFileSync(
     path.join(__dirname, "content", "core.js"),
@@ -248,10 +261,10 @@ async function exportNotebook(inPath, outDir, options) {
   const runtime = new Runtime(new Library());
   const target = new Set(${JSON.stringify(target)});
   const observer = target.size > 0 
-  ? name => {
-    if(target.has(name)) return new Inspector(document.body.appendChild(document.createElement("div")));
-  }
-  : Inspector.into(document.body);
+    ? name => {
+      if(target.has(name)) return new Inspector(document.body.appendChild(document.createElement("div")));
+    }
+    : Inspector.into(document.body);
   const main = runtime.module(define, observer);
   
   </script>`,
