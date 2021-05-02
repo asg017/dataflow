@@ -1,7 +1,0 @@
-import {op} from "./import-subd-op.ojs";
-
-a = 1
-
-b = 2
-
-c = op(a,b)

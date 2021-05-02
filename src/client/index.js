@@ -19,9 +19,11 @@ async function resolveImportPath(name) {
 
 // both
 function computeLibrary() {
-  if (!window.OJS_STDLIB) window.OJS_STDLIB = { constants: {}, dependency: {} };
-  if (!window.OJS_STDLIB.constants) window.OJS_STDLIB.constants = {};
-  if (!window.OJS_STDLIB.dependency) window.OJS_STDLIB.dependency = {};
+  if (!window.DATAFLOW_STDLIB)
+    window.DATAFLOW_STDLIB = { constants: {}, dependency: {} };
+  if (!window.DATAFLOW_STDLIB.constants) window.DATAFLOW_STDLIB.constants = {};
+  if (!window.DATAFLOW_STDLIB.dependency)
+    window.DATAFLOW_STDLIB.dependency = {};
   const baseLibrary = new Library();
   const library = Object.assign(
     baseLibrary,
@@ -41,14 +43,14 @@ function computeLibrary() {
         });
       },
     },
-    window.OJS_STDLIB.constants
+    window.DATAFLOW_STDLIB.constants
   );
 
   const customLibraryResolved = {};
   // key = already added library builtin, e.g. "require", "width"
   // value = { newBuiltin1: def, newBuiltin2: def }
   for (const [depBuiltin, newBuiltins] of Object.entries(
-    window.OJS_STDLIB.dependency
+    window.DATAFLOW_STDLIB.dependency
   )) {
     for (const [newBuiltinName, newBuiltinDefinition] of Object.entries(
       newBuiltins

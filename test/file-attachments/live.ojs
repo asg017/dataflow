@@ -1,0 +1,25 @@
+/*
+FileAttachments:
+    csv: ../data/live.csv
+*/
+
+md`
+# Testing: Live File Attachments
+`;
+
+
+md`~~~bash
+node -e 'process.stdout.write(JSON.stringify(Array.from({length:25}, (_,i)=>i)))' | ndjson-split | ndjson-map '{name: "n" + d, value: Math.random() * 100}' | ndjson-reduce  | json2csv > ./test/data/live.csv 
+~~~`
+
+LiveFileAttachment;
+
+fa = LiveFileAttachment("csv");
+
+data = fa.csv({typed:true});
+
+import {chart} with {data} from "https://observablehq.com/@d3/bar-chart"
+
+chart
+
+

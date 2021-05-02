@@ -5,12 +5,28 @@ FileAttachments:
 */
 
 md`
-# test/export: top.ojs
+# Testing exports
+`;
+
+md`
+browser width
 `;
 
 width;
 
+md`
+## import a and b, calculate c
+`;
+
+import { a } from "./a.ojs";
+
+import { b } from "./b.ojs";
+
 c = a + b;
+
+md`
+## file attachments
+`;
 
 x = FileAttachment("x").text();
 
@@ -18,18 +34,26 @@ y = FileAttachment("y").text();
 
 z = FileAttachment("z").text();
 
-content;
-
-name;
-
-one_cell;
-
-import { a } from "./a.ojs";
-
-import { b } from "./b.ojs";
+md`
+## Import local file
+`;
 
 import { content } from "./sub_with_fa.ojs";
 
+content;
+
+md`
+## Import observablehq notebook
+`;
+
 import { name } from "https://observablehq.com/@tmcw/hello-world";
 
+name;
+
+md`
+## imports should tree shake
+`;
+
 import { one_cell } from "./ts-me.ojs";
+
+one_cell;

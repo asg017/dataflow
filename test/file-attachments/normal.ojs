@@ -1,7 +1,7 @@
 /*
 FileAttachments:
-    file: ./data/a.txt
-    notexist: ./data/notexist.txt
+    file: ../data/a.txt
+    notexist: ../data/notexist.txt
 */
 
 md`
@@ -10,7 +10,7 @@ md`
 Toggle \`file: ./data/a.txt\` above to \`b.txt\` or \`c.txt\` and this should update
 
 ~~~bash
-code ./test/file-attachments.ojs
+code ./test/file-attachments/normal.ojs
 ~~~
 `;
 

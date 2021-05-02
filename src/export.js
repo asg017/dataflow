@@ -10,7 +10,6 @@ const {
 const { readFileSync, writeFileSync } = require("rw").dash;
 
 const { extractHeader } = require("./run");
-const { readFile } = require("rw/lib/rw/dash");
 
 function sha256(s) {
   const shasum = crypto.createHash("sha256");
@@ -18,53 +17,19 @@ function sha256(s) {
   return shasum.digest("hex");
 }
 
-/*
-1. export to a directory
-2. for local imports, also compile those and include
-3. For observablehq.com imports, leave as is?
-4. Fileattachments, bundle in 
-5. Secrets, throw error
-*/
-async function exportNotebookOld(inPath, outPath, options) {
-  const { format = "js" } = options;
-  const compile = new Compiler();
-  const esmSource = await compile.module(readFileSync(inPath));
-  if (format.toLowerCase() === "html" || outPath.endsWith(".html")) {
-    return writeFileSync(
-      outPath,
-      `<!DOCTYPE html>
-    <head>
-        <meta charset="utf-8">
-        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css">
-        <script src="https://cdn.jsdelivr.net/npm/htl"></script>
-    </head>
-    <body>
-    <script type=module>
-    ${esmSource.replace(/export default /, "window.define = ")}
-    </script>
-    <script type="module">
-    import {Runtime, Library, Inspector} from "https://cdn.jsdelivr.net/npm/@observablehq/runtime@4/dist/runtime.js";
-
-    const library = Object.assign(
-        new Library(),
-        {
-          html: () => htl.html,
-          svg: () => htl.svg,
-        }
-    );
-    
-    const runtime = new Runtime(library);
-    const main = runtime.module(window.define, Inspector.into(document.body));
-    
-    </script>`
-    );
-  }
-
-  writeFileSync(outPath, esmSource, "utf8");
-}
-
 function isObservablehq(name) {
   return name.startsWith("https://observablehq.com");
+}
+
+function isObservableImport(path) {
+  if (path.startsWith("https")) {
+    const url = new URL(path);
+    // beta, next, api subdomains
+    if (url.hostname.endsWith("observablehq.com")) {
+      return `https://api.observablehq.com${url.pathname}.js?v=3`;
+    }
+  }
+  return false;
 }
 
 // TODO if multiple notebooks import the same notebook but tree-shake different cells, then that notebook will appear multiple times in the compiled output (1 slightly different compiled output for each unique tree-shaked version). We should instead find all imported .ojs files w/ specified cells, then group by unique .ojs file, then compile the file with treeshaking based on ALL specified cells.
@@ -91,15 +56,13 @@ function ojsSHA(path, treeshake) {
   return sha256(src + spec);
 }
 
-/*
-TODO
-1) allow for single-file exports, .ojs to js, thats it. If import a local notebook, just warn and move on. 
-2) allow for glob/wildcard, ex:
-  dataflowc notebooks/* dist/
-3) allow to write to tar file (test if stdout works)
-*/
-async function exportNotebook(inPath, outDir, options) {
-  const { stdlibPath, target = [], treeShake = null } = options;
+async function exportBundle(inPath, outDir, options) {
+  const {
+    stdlibPath,
+    target = [],
+    treeShake = null,
+    includeStyling = false,
+  } = options;
   let top;
 
   mkdirSync(outDir);
@@ -253,8 +216,22 @@ async function exportNotebook(inPath, outDir, options) {
   <head>
       <meta charset="utf-8">
       <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css">
+      ${
+        includeStyling
+          ? `<link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.css"
+      />
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/a11y-light.css"
+        integrity="sha256-7Ci437NptsJ20PYDV1yQgfJf5M1mtLRPJe1TPRYj/M4="
+        crossorigin="anonymous"
+      />`
+          : ""
+      }
   </head>
-  <body>
+  <body${includeStyling ? ` class="markdown-body"` : ""}>
   <script type="module">
   import {Runtime, Library, Inspector} from "./core.js";
   import define from "./index.js";
@@ -271,6 +248,39 @@ async function exportNotebook(inPath, outDir, options) {
     "utf8"
   );
 }
+/*
+TODO
+1) allow for single-file exports, .ojs to js, thats it. If import a local notebook, just warn and move on. 
+2) allow for glob/wildcard, ex:
+  dataflowc notebooks/* dist/
+3) allow to write to tar file (test if stdout works)
+*/
+
+function compileNotebook(source, treeShake) {
+  const compile = new Compiler({
+    resolveImportPath: (path, specifiers) => {
+      return isObservableImport(path) || ``;
+    },
+    resolveFileAttachments: (name) => {
+      return ``;
+    },
+  });
+  return compile.module(source, { treeShake });
+}
+
+/*
+dataflowc top.ojs output/ --bundle --format=dir
+dataflowc notebooks/*.ojs dist/
+dataflowc notebooks/*.ojs dist/
+*/
+async function exportNotebook(inPath, output, options) {
+  const { treeShake = null, bundle = false } = options;
+  if (bundle) return exportBundle(inPath, output, options);
+  const source = readFileSync(inPath, "utf8");
+  const compiled = compileNotebook(source, treeShake);
+  writeFileSync(output, compiled, "utf8");
+}
 module.exports = {
   exportNotebook,
+  compileNotebook,
 };

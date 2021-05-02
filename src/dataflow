@@ -21,9 +21,6 @@ function parseSecrets(values) {
 
 // TODO
 // 1) add --allow-file-attachments permission flag
-// 2) add --stdlib path option
-// 3) add --tree-shake "a,b,viewof c"
-// 4) add --target "a,b,c" for index.html observing
 program
   .version(require("../package.json").version)
   .command("export <notebook> <outfile>")
@@ -35,15 +32,28 @@ program
     "Path to JS file that the browser will execute as-is to add to the notebooks builtin variables."
   )
   .option(
-    "--target [cells...]",
+    "--target <cells>",
     "Array of cells to 'target' when embeding in the index.html file. Only these cells will be observed."
   )
   .option(
-    "--tree-shake [cells...]",
-    "Tree-shake the compiled output, keeping only cell defintions for the named 'cells' and any cell they depend on. Unused imports and FileAttachments will not be included."
+    "--tree-shake <cells>",
+    "Tree-shake the compiled output, keeping only cell defintions for the named 'cells' and any cell they depend on. Unused imports and FileAttachments will not be included. 'cells' are comma seperated name of cells to tree shake."
+  )
+  .option(
+    "--bundle",
+    "Whether or not to bundle the notebook's dependencies (local .ojs import and file attachments) in the compiled output. Format must be directory or tgz."
+  )
+  .option(
+    "--include-styling",
+    "Whether or not to include the stylesheets that are used in the dataflow run dev server. ",
+    false
   )
   .action((inPath, outPath, options) => {
-    exportNotebook(inPath, outPath, options);
+    exportNotebook(inPath, outPath, {
+      ...options,
+      target: options.target && options.target.split(","),
+      treeShake: options.treeShake && options.treeShake.split(","),
+    });
   });
 
 program

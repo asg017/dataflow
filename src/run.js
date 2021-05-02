@@ -5,7 +5,10 @@ const WebSocketServer = require("websocket").server;
 const http = require("http");
 const EventEmitter = require("events");
 const fetch = require("node-fetch");
-const { Compiler } = require("@alex.garcia/unofficial-observablehq-compiler");
+const {
+  Compiler,
+  treeShakeModule,
+} = require("@alex.garcia/unofficial-observablehq-compiler");
 const { ModuleParser } = require("@observablehq/parser");
 const path = require("path");
 const yaml = require("js-yaml");
@@ -150,12 +153,55 @@ function runServer(params = {}) {
   let lastMessage;
   sourceEmitter.on("update", (e) => (lastMessage = e));
 
-  chokidar.watch(notebookPath).on("all", (event, path) => {
-    readFile(path, "utf8")
+  const fileAttachmentWatcher = allowFileAttachments
+    ? chokidar.watch([], {})
+    : null;
+  let headerPathToNames;
+
+  chokidar.watch(notebookPath).on("all", (event, notebookPath) => {
+    readFile(notebookPath, "utf8")
       .then((source) => {
+        // on new source, if any FA changes, then update fileAttachmentWatcher
+        const header = extractHeader(source);
+
+        // LiveFileAttachment stuff
+        if (allowFileAttachments && header && header.FileAttachments) {
+          const currentWatchList = new Set(
+            // getWatched returns { absDirectory => [file1, file2, etc.] }
+            Object.entries(fileAttachmentWatcher.getWatched()).reduce(
+              (a, v) => [...a, ...v[1].map((d) => path.join(v[0], d))],
+              []
+            )
+          );
+          const headerFAs = header.FileAttachments;
+          // key: absolute path to FA, e.g. /home/alex/notebooks/data/people.csv
+          // value: array of FA names that the path defines, ex. ["data", "people"]
+          headerPathToNames = Object.entries(headerFAs).reduce((a, current) => {
+            const [name, p] = current;
+            const absPath = path.resolve(path.dirname(notebookPath), p);
+            if (a.has(absPath))
+              return a.set(absPath, [...a.get(absPath), name]);
+            else return a.set(absPath, [name]);
+          }, new Map());
+
+          // if new header.FileAttachments has a new path, then add to watchlist.
+          for (const [path, names] of headerPathToNames) {
+            if (!currentWatchList.has(path)) {
+              fileAttachmentWatcher.add(path);
+            }
+          }
+
+          // if a previously watched file isnt in header anymore, rm it.
+          for (const watchedFile of currentWatchList) {
+            if (!headerPathToNames.has(watchedFile)) {
+              fileAttachmentWatcher.unwatch(watchedFile);
+            }
+          }
+        }
+
         sourceEmitter.emit("update", {
           event,
-          path,
+          path: notebookPath,
           source,
         });
       })
@@ -222,7 +268,7 @@ function runServer(params = {}) {
     if (!originIsAllowed(request.origin)) {
       request.reject();
       console.log(
-        `${Date.now()} Connection from origin ${request.origin} rejected.`
+        ""`${Date.now()} Connection from origin ${request.origin} rejected.`
       );
       return;
     }
@@ -232,12 +278,34 @@ function runServer(params = {}) {
     console.log(`${Date.now()} Connection accepted.`);
 
     // initial msg to populate
-    connection.sendUTF(JSON.stringify(lastMessage));
+    connection.sendUTF(
+      JSON.stringify({
+        type: "update",
+        data: lastMessage,
+      })
+    );
 
     function onUpdate(e) {
-      connection.sendUTF(JSON.stringify(e));
+      connection.sendUTF(
+        JSON.stringify({
+          type: "update",
+          data: e,
+        })
+      );
     }
     sourceEmitter.on("update", onUpdate);
+    if (fileAttachmentWatcher)
+      fileAttachmentWatcher.on("change", (path, stats) => {
+        const names = headerPathToNames.get(path);
+        connection.sendUTF(
+          JSON.stringify({
+            type: "live-fa",
+            data: {
+              names,
+            },
+          })
+        );
+      });
 
     connection.on("close", function (reasonCode, description) {
       console.log(

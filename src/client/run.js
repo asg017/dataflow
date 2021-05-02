@@ -1,5 +1,6 @@
 // included in the index.html for `dataflow run`
 import { Runtime, Inspector } from "@observablehq/runtime";
+import { FileAttachments } from "@observablehq/stdlib";
 import {
   Interpreter,
   parser,
@@ -19,7 +20,7 @@ function defineSecret(name) {
   return fetch(`/api/secrets/${name}`).then((r) => {
     if (!r.ok) {
       if (r.status === 403) {
-        throw Error("Secret access not allow. Enable with --allow-secrets.");
+        throw Error("Secret access not allowed. Enable with --allow-secrets.");
       }
       if (r.status === 404) {
         throw Error(
@@ -42,20 +43,30 @@ function defineFileAttachment(runtime) {
       (name) => `/api/file-attachments?name=${encodeURIComponent(name)}`
     );
 }
+function defineLiveFileAttachment(library, liveFileAttachments) {
+  const FA = FileAttachments(
+    (name) => `/api/file-attachments?name=${encodeURIComponent(name)}`
+  );
+  return () => {
+    return function (name) {
+      return library.Generators.observe((change) => {
+        change(FA(name));
 
-function main() {
-  const cellMap = new Map();
+        function onUpdate(e) {
+          const { names } = e.detail;
+          if (names.includes(name)) change(FA(name));
+        }
+        liveFileAttachments.addEventListener("update", onUpdate);
+        return () => {
+          liveFileAttachments.removeEventListener("update", onUpdate);
+        };
+      });
+    };
+  };
+}
 
-  const container = document.querySelector("#dataflow-container");
-  const errContainer = document.querySelector(".dataflow-error-syntax");
-  const observer = Inspector.into(container);
-
-  const library = Library();
-  const runtime = new Runtime(library);
-
-  const main = runtime.module();
-
-  main.define("width", [], () => {
+function defineWidth(library, container) {
+  return () => {
     return library.Generators.observe((change) => {
       change(null);
       const ro = new ResizeObserver((entries) => {
@@ -66,7 +77,22 @@ function main() {
       ro.observe(container);
       return () => ro.disconnect();
     });
-  });
+  };
+}
+function main() {
+  const cellMap = new Map();
+
+  const container = document.querySelector("#dataflow-container");
+  const errContainer = document.querySelector(".dataflow-error-syntax");
+
+  const liveFileAttachments = new EventTarget();
+
+  const observer = Inspector.into(container);
+
+  const library = Library();
+  const runtime = new Runtime(library);
+
+  const main = runtime.module();
 
   const interpret = new Interpreter({
     resolveImportPath,
@@ -74,12 +100,15 @@ function main() {
     observeMutableValues: false,
   });
   main.define("FileAttachment", defineFileAttachment(runtime));
+  main.define(
+    "LiveFileAttachment",
+    defineLiveFileAttachment(library, liveFileAttachments)
+  );
   main.define("Secret", () => defineSecret);
+  main.define("width", [], defineWidth(library, container));
 
-  async function onMessage(event) {
-    console.debug("DATAFLOW", "received msg", event);
-    const m = JSON.parse(event.data);
-    const source = m.source;
+  async function onUpdate(data) {
+    const source = data.source;
     let parsedModule;
 
     while (errContainer.firstChild)
@@ -172,20 +201,55 @@ function main() {
     }
   }
 
+  async function onLiveFileAttachment(data) {
+    const { names } = data;
+    liveFileAttachments.dispatchEvent(
+      new CustomEvent("update", {
+        detail: {
+          names,
+        },
+      })
+    );
+  }
+
+  async function onMessage(event) {
+    const message = JSON.parse(event.data);
+    console.debug("DATAFLOW", "received message", message.type, message, {
+      event,
+    });
+    switch (message.type) {
+      case "update":
+        onUpdate(message.data);
+        break;
+      case "live-fa":
+        onLiveFileAttachment(message.data);
+        break;
+      default:
+        console.error(
+          "DATAFLOW",
+          "Unknown type ",
+          message.type,
+          message.data,
+          event
+        );
+        break;
+    }
+  }
+
   const statusFooter = document.querySelector(".dataflow-footer-status");
 
   function connect() {
     const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
     socket.addEventListener("open", function (event) {
-      console.log("Socket opened");
+      console.debug("DATAFLOW", "Socket opened");
       statusFooter.textContent = "✅ Socket connected!";
     });
 
     socket.addEventListener("close", function (err) {
-      console.log("Socket is closed. Reconnecting....");
+      console.debug("DATAFLOW", "Socket is closed. Reconnecting....");
       statusFooter.textContent =
         "⌛ Connection closed, attempting to reconnect...";
-      setTimeout(connect, 250);
+      setTimeout(connect, 500);
     });
 
     socket.addEventListener("message", onMessage);

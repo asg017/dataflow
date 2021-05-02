@@ -1,4 +1,4 @@
-window.OJS_STDLIB = {
+window.DATAFLOW_STDLIB = {
   dependency: {
     require: {
       d3v5: (require) => require("d3@5"),

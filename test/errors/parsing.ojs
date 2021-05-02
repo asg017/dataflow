@@ -4,7 +4,7 @@ md`
 # test - parsing errors
 
 ~~~bash
-code ./test/parsing-errors.ojs
+code ./test/errors/parsing.ojs
 ~~~
 `;
 

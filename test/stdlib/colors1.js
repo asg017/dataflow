@@ -1,4 +1,4 @@
-window.OJS_STDLIB = {
+window.DATAFLOW_STDLIB = {
   constants: {
     red: "#ee2222",
     blue: "#1122ee",

@@ -6,7 +6,7 @@ b = 200;
 
 md`## Test A: import local .ojs`
 
-import {c as Ca} with {a, b} from "./import-suba.ojs"
+import {c as Ca} with {a, b} from "./suba.ojs"
 
 Ca
 
@@ -16,7 +16,7 @@ Ca === -100
 
 md`## Test B: import another local .ojs`
 
-import {c as Cb} with {a, b} from "./import-subb.ojs"
+import {c as Cb} with {a, b} from "./subb.ojs"
 
 Cb
 
@@ -39,7 +39,7 @@ md`---`
 
 md`## Test D: import local .ojs that imports another .ojs`
 
-import {c as Cd} with {a, b} from "./import-subd.ojs"
+import {c as Cd} with {a, b} from "./subd.ojs"
 
 Cd
 

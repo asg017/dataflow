@@ -1,4 +1,6 @@
-import { equals } from "./test-suite.ojs";
+md`
+# Testing custom stdlib: colors
+`;
 
 color = (color) =>
   html`<div

@@ -1,0 +1,17 @@
+//import { chart } from "https://observablehq.com/@d3/horizontal-bar-chart";
+
+a = 1;
+
+b = 2;
+
+c = a - b;
+
+d3 = require("d3");
+
+svg`<svg width=100 height=100>
+
+${d3
+  .range(100)
+  .map(
+    (d) => svg`<circle cx=${Math.random() * 100} cy=${Math.random() * 100} r=4>`
+  )}`;

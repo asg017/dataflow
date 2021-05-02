@@ -1,0 +1,15 @@
+md`
+# Testing custom stdlib: functions
+`;
+
+md`
+## Should be in uppercase
+`;
+
+upper("alex garcia");
+
+md`
+## Should be in lowercase
+`;
+
+lower("ALEX GARCIA");
