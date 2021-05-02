@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+  <head>
+      <meta charset="utf-8">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css">
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.css"
+      />
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/highlight.js@10.6.0/styles/a11y-light.css"
+        integrity="sha256-7Ci437NptsJ20PYDV1yQgfJf5M1mtLRPJe1TPRYj/M4="
+        crossorigin="anonymous"
+      />
+  </head>
+  <body class="markdown-body">
+  <script type="module">
+  import {Runtime, Library, Inspector} from "./core.js";
+  import define from "./index.js";
+  const runtime = new Runtime(new Library());
+  const target = new Set(["style","styleTOC","content","nav","navParent","hash","hashchange"]);
+  const observer = target.size > 0 
+    ? name => {
+      if(target.has(name)) return new Inspector(document.body.appendChild(document.createElement("div")));
+    }
+    : Inspector.into(document.body);
+  const main = runtime.module(define, observer);
+  
+  </script>
