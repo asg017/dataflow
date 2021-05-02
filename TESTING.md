@@ -29,6 +29,6 @@ src/dataflow run ./test/errors/parsing.ojs --no-open
 src/dataflow run ./test/imports/top.ojs --no-open
 
 # compiling
-rm -rf ./test/export/dist || true; src/dataflow export ./test/export/top.ojs ./test/export/dist --bundle
+rm -rf ./test/export/dist || true; src/dataflow compile ./test/export/top.ojs ./test/export/dist --bundle
 
 ```

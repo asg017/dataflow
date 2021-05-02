@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const { program } = require("commander");
-const { exportNotebook } = require("./export");
+const { compileNotebook } = require("./compile");
 const { runServer } = require("./run");
 
 function parseSecrets(values) {
@@ -23,9 +23,9 @@ function parseSecrets(values) {
 // 1) add --allow-file-attachments permission flag
 program
   .version(require("../package.json").version)
-  .command("export <notebook> <outfile>")
+  .command("compile <notebook> <outfile>")
   .description(
-    "Export a notebook to a directory containg compiled ES modules, File Attachments, runtime/stdlib JS files, and an example index.html."
+    "Compile a notebook to a directory into compiled ES modules, File Attachments, runtime/stdlib JS files, and an example index.html."
   )
   .option(
     "--stdlib <path>",
@@ -49,7 +49,7 @@ program
     false
   )
   .action((inPath, outPath, options) => {
-    exportNotebook(inPath, outPath, {
+    compileNotebook(inPath, outPath, {
       ...options,
       target: options.target && options.target.split(","),
       treeShake: options.treeShake && options.treeShake.split(","),

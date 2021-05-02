@@ -12,7 +12,6 @@ dataflow --help
 
 ## TODO
 
-- [ ] fix FA path/name updates
 - [ ] export -> compile
 - [ ] document compiling
 - [ ] publish docs on github pages

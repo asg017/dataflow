@@ -41,7 +41,7 @@ function isObservableImport(path) {
     /939eace82398
     /bb8c4ae83948
   index.html
-  index.js            -- re-export whatever is target notebook
+  index.js            -- re-compile whatever is target notebook
   stdlib.js           -- any passed in stdlib file
   core.js             -- client/core, defines runtime, stdlib
   aca987ca987.js      -- imported notebook #1 (as sha, not file name)
@@ -56,7 +56,7 @@ function ojsSHA(path, treeshake) {
   return sha256(src + spec);
 }
 
-async function exportBundle(inPath, outDir, options) {
+async function compileBundle(inPath, outDir, options) {
   const {
     stdlibPath,
     target = [],
@@ -250,7 +250,7 @@ async function exportBundle(inPath, outDir, options) {
 }
 /*
 TODO
-1) allow for single-file exports, .ojs to js, thats it. If import a local notebook, just warn and move on. 
+1) allow for single-file compilations, .ojs to js, thats it. If import a local notebook, just warn and move on. 
 2) allow for glob/wildcard, ex:
   dataflowc notebooks/* dist/
 3) allow to write to tar file (test if stdout works)
@@ -273,14 +273,14 @@ dataflowc top.ojs output/ --bundle --format=dir
 dataflowc notebooks/*.ojs dist/
 dataflowc notebooks/*.ojs dist/
 */
-async function exportNotebook(inPath, output, options) {
+async function compileNotebook(inPath, output, options) {
   const { treeShake = null, bundle = false } = options;
-  if (bundle) return exportBundle(inPath, output, options);
+  if (bundle) return compileBundle(inPath, output, options);
   const source = readFileSync(inPath, "utf8");
   const compiled = compileNotebook(source, treeShake);
   writeFileSync(output, compiled, "utf8");
 }
 module.exports = {
-  exportNotebook,
+  compileBundle,
   compileNotebook,
 };

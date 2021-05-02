@@ -67,7 +67,7 @@ fellas in my hair
 quickstart = () => md`
 ## Quickstart + Installation
 
-Dataflow is a program that you install on your computer and use on the command line. \`dataflow run\` will start a dev sever that enable a live editing experience for your \`.ojs\` notebook files, and \`dataflow export\` will compile thise files into re-usable JavaScript ES modules for use in other projects.
+Dataflow is a program that you install on your computer and use on the command line. \`dataflow run\` will start a dev sever that enable a live editing experience for your \`.ojs\` notebook files, and \`dataflow compile\` will compile thise files into re-usable JavaScript ES modules for use in other projects.
 
 ### Install
 
@@ -330,7 +330,7 @@ password = Secret("PASSWORD");
 
 One key difference here from [observablehq.com Secrets](https://observablehq.com/@observablehq/secrets): a \`Secret("key")\` call returns a Promise, not the secret directly.
 
-Secrets are not supported when compiling notebooks with \`dataflow export\`.
+Secrets are not supported when compiling notebooks with \`dataflow compile\`.
 `
 
 importing = ()=>md`## Importing notebooks
