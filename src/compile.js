@@ -274,7 +274,8 @@ dataflowc notebooks/*.ojs dist/
 dataflowc notebooks/*.ojs dist/
 */
 async function compileNotebook(inPath, output, options) {
-  const { treeShake = null, bundle = false } = options;
+  // hard coding bundle=true for now bc compileNotebook isn't that useful yet
+  const { treeShake = null, bundle = true } = options;
   if (bundle) return compileBundle(inPath, output, options);
   const source = readFileSync(inPath, "utf8");
   const compiled = compileNotebook(source, treeShake);

@@ -44,8 +44,19 @@ pageMeta
 
 mutable currentI = {
   const i = pageMeta.findIndex(p=>p.id === window.location.hash.substring(1));
+
   if(i >=0) return i;
   return 0;
+}
+
+hashchange = {
+  function onhashchange() {
+    const i = pageMeta.findIndex(p=>p.id === window.location.hash.substring(1));
+    if(i >=0) mutable currentI = i;
+  }
+
+  window.addEventListener("hashchange", onhashchange, false);
+  invalidation.then( () => window.removeEventListener("hashchange", onhashchange))
 }
 
 hash = {
@@ -254,7 +265,7 @@ d3.sum(fakeData);
 
 ### This will change
 
-\`window.DATAFLOW_STDLIB\` is pretty awkward and limiting, so I plan to change this API in the future. Follow [#16](https://github.com/asg017/dataflow/issues/16) for more.67
+\`window.DATAFLOW_STDLIB\` is pretty awkward and limiting, so I plan to change this API in the future. Follow [#16](https://github.com/asg017/dataflow/issues/16) for more.
 `
 
 fileattachments = ()=>md`## File Attachments
@@ -302,7 +313,7 @@ csvFile = LiveFileAttachment("data.csv")
 data = csvFile.csv({typed: true}) // [{name: "alex", value: 23 ...}]
 \`\`\`
 
-Whenever \`./path/to/file.csv\` gets changed (new contents, changed file metadata, etc.), then \`csvFile\` will yield a new value, causing downstream cells like \`data\` to refresh with new data. 
+Whenever \`./path/to/file.csv\` updates (new contents, changed file metadata, etc.), then \`csvFile\` will yield a new value, causing downstream cells like \`data\` to refresh with new data. 
 
 Remember, \`LiveFileAttachment\` returns an async generator, NOT the actual file attachment object, so it's not 100% compatible with the \`FileAttachment\` API. If you assign the return value of \`LiveFileAttachment("data.csv")\` to its own cell (\`csvFile\` in the example above), then you can reference that cell as a file attachment object like normal, thanks to the Observable runtime. 
 
@@ -393,52 +404,104 @@ Note that because of differences between Dataflow's and observablehq's standard 
 compiling = () => md`## Compiling Notebooks
 
 Your \`.ojs\` files can be compiled to ES modules for easier integrations with other tools, similar to the [Advanced Embedding and Downloading
-](https://observablehq.com/@observablehq/downloading-and-embedding-notebooks) on observablehq.com. These compiled files could be inclued in other projects like React apps, SPAs, or any other place the web can reach.
+](https://observablehq.com/@observablehq/downloading-and-embedding-notebooks) on observablehq.com. These compiled files could be included in other projects like React apps, SPAs, or any other place the web can reach.
 
-Compiling does **not** bundle everything needed to run an Observable notebook. You will still need to include the Observable runtime when embeding your notebooks elsewhere, and any dynamically fetched dependencies (like \`require()\` or \`import()\`) inside your code will not be included in the compiled bundle. 
+Compiling does **not** bundle everything needed to run an Observable notebook. You will still need to include the Observable runtime when embeding your notebooks elsewhere, and any dynamically fetched dependencies (like \`require()\` or \`import()\`) inside your code will not be included in the compiled bundle. There is an example \`index.html\` file inside the bundle that demonstrates how to run your notebook (which imports the Observable runtime to do so).
+
+### Tree Shaking
+
+Tree-shaking is a technique used to remove un-used code from a compiled bundle. Say your top-level \`.ojs\` file looks like this:
+
+~~~js
+
+md\`# My notebook!\`
+
+import {helper} from "./sub.ojs";
+
+example = helper("California")
+
+~~~
+
+And inside \`sub.ojs\`:
+
+~~~js
+/*
+FileAttachments:
+  big-file: ./path/to/big.file
+*/
+
+md\`sub.ojs helper!\`
+
+function helper(state) {
+  return state;
+}
+
+d3 = require("d3")
+
+data = d3.json("https://example.com/big-file")
+
+file = FileAttachment("big-file".text()
+
+~~~
+
+Notice how \`top.ojs\` only imports the \`helper\` cell from \`sub.ojs\`, meaning it completely ignore the \`d3\`, \`data\`, and \`file\` cells from that submodule (and the \`big-file\`) FileAttachment.
+
+This means that when we are compiling, we can tree-shaking code from local \`.ojs\` files to remove un-used cells, file attachments, and sub imports. In this case, only code that is required to define \`helper\` will be included, meaning the \`d3\`, \`data\`, \`file\`, and the unnamed markdown cell will not appear in the compiled output.
+
+This is enabled by default for all local \`.ojs\` imports. It's not possible when importing observablehq.com notebooks, since they don't support tree-shaking (yet!). The top-level \`.ojs\` file won't be tree-shaked, but you do so with the \`--tree-shake cell1,cell2\` flag.
 
 ### FileAttachments
+
+FileAttachments are included inside the compiled bundle. Say you have:
+
+~~~js
+/*
+FileAttachments:
+  a: ./a.txt
+  b: ./b.txt
+*/
+
+a = FileAttachment("a").text()
+
+b = FileAttachment("b").text()
+~~~
+
+When compiled, \`a.txt\` and \`b.txt\` will be copied over into your compiled bundle, inside the \`files/\` directory. The name will be the SHA-256 checksum of the file (to avoid naming conflicts). the structure and the naming scheme will probably change in the future.
 
 
 ### Custom Standard Libraries
 
-### Secrets
+Pass in the \`--stdlib\` flag with a path to the \`stdlib.js\` configuration file (see [Custom Standard Libraries](#custom-standard-libraries) for details). That file will be copied over and included in your bundle, and will be ran with the example \`index.html\` file.
 
-https://github.com/asg017/dataflow/issues/17`
+### Compiling will get better
+
+\`dataflow compile\` has a weird API and a ton more improvements can be made, so follow [#17](https://github.com/asg017/dataflow/issues/17) to stay in the loop.`
 
 production = () => md`## Using Dataflow
 
 ### ObservableHQ vs. Dataflow
 
-Here are some features that Observable notebooks on observablehq.com have that Dataflow does not:
+Here are some feature comparisions between Observable notebooks on observablehq.com and Dataflow:
 
-- Secure, sandbox notebooks served over HTTPS
-- Hosting several notebooks at a time
-- Multiplayer editing
-- Database Connections
-- Customer Support
-- A vibrant, welcoming community (very important!)
-- Inlined source code and a web-based editor (Dataflow is bring-your-own editor)
+|Feature|ObservableHQ?|Dataflow?
+|-|-|-
+|A large, vibrant community|✅|❌
+|Customer Support|✅|❌
+|Hosts several notebooks|✅|❌
+|Strongly sandboxed notebooks|✅|❌
+|Secrets|✅|✅
+|FileAttachments|✅|✅
+|"Live" FileAttachments|❌|✅
+|Custom builtin cells (stdlib)|❌|✅
+|Tree-shaking|❌|✅
+|git-friendly|❌ <sup>[1]</sup>|✅
+|Database connections|✅|❌<sup>[2]</sup>
+|In-browser editor|✅|❌
+|Bring your own editor (VS Code, vim, emac, etc.)|❌|✅
 
-And here are some features that Dataflow Observable notebooks have that observablehq.com notebooks do not:
+\`[1]\`  You can download compiled JavaScript files from observablehq.com and version-control it, but there's no supported way to download the original "Observable syntax".
 
-- Use whatever text editor or IDE you want
-- Save "Observable Javascript" to actual files (very git and version control friendly)
-- Tree-shaking
-- LiveFileAttachments
-- Custom Standard Libraries
-- Non-iframe'd notebook (access to Bluetooth APIs, \`document.title\` / \`window.location.hash\`, etc.)
-- Complete customizability of rendered notebook
-
-### Security Notes
-
-Here's a few things I wouldn't do with dataflow:
-
-1) Run an \`.ojs\` file with \`dataflow run\` that I have not read/inspected myself (ie, not random )
-
-
-
-### y tho
+\`[2]\` *Technically* you could run a database proxy on your local compter (ex on \`http://localhost:5000\`) then build your own \`DatabaseClient\` that accesses the data, but no built-in support.
 
 ### Future of Dataflow
 
@@ -451,19 +514,50 @@ reference = () => md`## Reference
 
 #### \`dataflow run\`
 
-- \`--allow-file-attachments\`
-- \`--stdlib <path>\`
-- \`--allow-secrets\`
-- \`--secret [secret...]\`
-- \`-p, --port <nnumber>\`
-- \`--no-open\`
+\`--allow-file-attachments\`
 
-#### \`dataflow compile\`
+Allow for notebooks to access defined FileAttachments. FileAttachments could point to any file on your filesystem, so use with caution on notebooks with unknown authors.
 
-- \`--stdlib <path>\`
-- \`--target <cells>\`
-- \`--tree-shake <cells>\`
-- \`--bundle\`
+\`--stdlib <path>\`
+
+Define aditional builtin cells, see [Custom Standard Libraries](#custom-standard-libraries) for more details. \`path\` is the path to the configuration file.
+
+\`--allow-secrets\`
+
+Allow for notebooks to fetch for "secrets" passed in with \`--secret\`. This may be depracated in the future.
+
+\`--secret [secret...]\`
+
+Define a secret that a notebook with access with \`Secret("name")\`. The format of \`secret\` is \`NAME:VALUE\` where \`NAME\` is the API-friendly name that the notebook will use, \`:\` as a seperator, and \`VALUE\` is the "secret" value of the secret itself.
+
+\`-p, --port <number>\`
+
+What port to start the server on. default 8080.
+
+\`--no-open\`
+
+By default, dataflow will open a new browser tab/window to the notebook. Use this to disable that behavior.
+
+
+#### \`dataflow compile input output\`
+
+\`--stdlib <path>\`
+
+Define aditional builtin cells, see [Custom Standard Libraries](#custom-standard-libraries) for more details. \`path\` is the path to the configuration file.
+
+
+\`--target <cells>\`
+
+By default, the \`index.html\` file inside the bundle will render the entire notebook, all cells including unnamed cells. \`--target\` can be used to only render a select few cells. \`cells\` is the list of cells you want to be rendered, seperated by commas (ex \`--target "a,b,viewof c, mutable debug"\`).
+
+\`--tree-shake <cells>\`
+
+By default, all cells in the input file will included in the compiled output, including unnamed cells. \`--tree-shake\` can be used to specficy only a select few cells to be including, and dataflow will remove any unnecessary cells, file attachments, and imports that are not needed. \`cells\` is the list of cells you want to keep (their dependencies will be kept implicitly), seperated by commas (ex \`--tree-shake "TimeChart,viewof example,LICENSE"\`).
+
+
+\`--include-styling\`
+
+Whether or not to include Dataflow-specific styling (some stylesheets) in the generated \`index.html\` file. This will be removed/changed in the future, see [#8](https://github.com/asg017/dataflow/issues/8).
 
 ### Node API
 
@@ -565,6 +659,7 @@ nav {
 .toc {
   border-right: 1px solid #ccc;
   height: 100%;
+  overflow: auto;
 }
 .toc-sub {
   font-size: .95rem;

@@ -40,10 +40,6 @@ program
     "Tree-shake the compiled output, keeping only cell defintions for the named 'cells' and any cell they depend on. Unused imports and FileAttachments will not be included. 'cells' are comma seperated name of cells to tree shake."
   )
   .option(
-    "--bundle",
-    "Whether or not to bundle the notebook's dependencies (local .ojs import and file attachments) in the compiled output. Format must be directory or tgz."
-  )
-  .option(
     "--include-styling",
     "Whether or not to include the stylesheets that are used in the dataflow run dev server. ",
     false

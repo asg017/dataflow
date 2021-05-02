@@ -15,7 +15,7 @@
     "src/*"
   ],
   "scripts": {
-    "docs": "rm -rf ./docs/out && ./src/dataflow export ./docs/index.ojs ./docs/out --bundle --target style,styleTOC,content,nav,navParent,hash --include-styling",
+    "docs": "rm -rf ./docs/out && ./src/dataflow compile ./docs/index.ojs ./docs/out --target style,styleTOC,content,nav,navParent,hash,hashchange --include-styling",
     "build-client": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm",
     "watch-client": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm --watch"
   },

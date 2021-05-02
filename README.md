@@ -12,8 +12,6 @@ dataflow --help
 
 ## TODO
 
-- [ ] export -> compile
-- [ ] document compiling
 - [ ] publish docs on github pages
 - [ ] README
 - [ ] examples
