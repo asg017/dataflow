@@ -1,0 +1,9 @@
+/*
+FileAttachments:
+  x: ../data/x.txt
+  y: ../data/y.txt
+*/
+
+x = FileAttachment("x");
+
+y = FileAttachment("y");

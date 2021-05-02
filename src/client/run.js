@@ -85,6 +85,10 @@ function main() {
   const container = document.querySelector("#dataflow-container");
   const errContainer = document.querySelector(".dataflow-error-syntax");
 
+  // key: name of FA
+  // value: path to FA (according to source)
+  const fileAttachments = new Map();
+
   const liveFileAttachments = new EventTarget();
 
   const observer = Inspector.into(container);
@@ -107,9 +111,54 @@ function main() {
   main.define("Secret", () => defineSecret);
   main.define("width", [], defineWidth(library, container));
 
+  // if the header source file:
+  //   1) adds a new FA
+  //   2) removes a previously defined FA
+  //   3) changes the path of a FA
+  // then we need to update FileAttachment and LiveFileAttachment
+  // this will unfortunately reload all FAs, but not too big of a deal
+  function maybeUpdateFileAttachments(newHeader, fileAttachments) {
+    if (!newHeader || !newHeader.FileAttachments) return;
+
+    let needsUpdating = false;
+
+    // a new FA has been added, or a previously defined FA has a different path now
+    for (const [name, path] of Object.entries(newHeader.FileAttachments)) {
+      if (!fileAttachments.has(name) || fileAttachments.get(name) !== path) {
+        needsUpdating = true;
+        break;
+      }
+    }
+
+    // a previously defined FA has been deleted
+    for (const [name, path] of fileAttachments) {
+      if (!newHeader.FileAttachments[name]) {
+        needsUpdating = true;
+        break;
+      }
+    }
+
+    if (needsUpdating) {
+      console.debug("DATAFLOW", "re-defining file attachments");
+
+      fileAttachments.clear();
+      for (const [name, path] of Object.entries(newHeader.FileAttachments)) {
+        fileAttachments.set(name, path);
+      }
+
+      main.redefine("FileAttachment", defineFileAttachment(runtime));
+      main.redefine(
+        "LiveFileAttachment",
+        defineLiveFileAttachment(library, liveFileAttachments)
+      );
+    }
+  }
+
   async function onUpdate(data) {
-    const source = data.source;
+    const { header, source } = data;
     let parsedModule;
+
+    maybeUpdateFileAttachments(header, fileAttachments);
 
     while (errContainer.firstChild)
       errContainer.removeChild(errContainer.firstChild);

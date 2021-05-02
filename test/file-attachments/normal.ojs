@@ -21,3 +21,12 @@ md`
 `;
 
 FileAttachment("notexist").text();
+
+md`
+## Imported
+`;
+
+import { x, y } from "./sub.ojs";
+
+x.text();
+y.text();

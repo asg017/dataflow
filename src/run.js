@@ -203,6 +203,7 @@ function runServer(params = {}) {
           event,
           path: notebookPath,
           source,
+          header,
         });
       })
       .catch((err) => console.error("err reading path", err));
