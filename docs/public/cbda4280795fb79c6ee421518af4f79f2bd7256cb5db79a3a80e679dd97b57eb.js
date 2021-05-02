@@ -1,6 +1,6 @@
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["package.json", new URL("./files/ca08cfe46726355d6b7aa24462c4a026a76b532415ca87b47b5becd244bdf28a", import.meta.url)]]);
+  const fileAttachments = new Map([["package.json", new URL("./files/20d01ea6168a0baae21e61bbb35b552781c84e5bd18be81c77cbb7f2c3312f3f", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer("nav")).define("nav", ["html","FileAttachment"], async function(html,FileAttachment){return(
 html`<nav>
@@ -57,7 +57,7 @@ pageMeta
 );
   main.variable(observer("mutable currentI")).define("mutable currentI", ["Mutable", "initial currentI"], (M, _) => new M(_));
   main.variable(null).define("currentI", ["mutable currentI"], _ => _.generator);
-  main.variable(observer("hashchange")).define("hashchange", ["pageMeta","mutable currentI","invalidation"], function(pageMeta,$0,invalidation)
+  main.variable(observer("hashchange")).define("hashchange", ["pageMeta","mutable currentI","invalidation","html"], function(pageMeta,$0,invalidation,html)
 {
   function onhashchange() {
     const i = pageMeta.findIndex(p=>p.id === window.location.hash.substring(1));
@@ -66,6 +66,7 @@ pageMeta
 
   window.addEventListener("hashchange", onhashchange, false);
   invalidation.then( () => window.removeEventListener("hashchange", onhashchange))
+  return html`<span>`;
 }
 );
   main.variable(observer("hash")).define("hash", ["pageMeta","currentI","html"], function(pageMeta,currentI,html)

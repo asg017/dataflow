@@ -57,6 +57,7 @@ hashchange = {
 
   window.addEventListener("hashchange", onhashchange, false);
   invalidation.then( () => window.removeEventListener("hashchange", onhashchange))
+  return html`<span>`;
 }
 
 hash = {
