@@ -15,8 +15,8 @@
     "src/*"
   ],
   "scripts": {
-    "docs-watch": "./src/dataflow run ./docs/index.ojs --allow-file-attachments",
-    "docs-build": "(rm -rf ./docs/public || true) && ./src/dataflow compile ./docs/index.ojs ./docs/public --target style,styleTOC,content,nav,navParent,hash,hashchange --include-styling",
+    "docs-watch": "./src/dataflow run ./docs/site.ojs --allow-file-attachments",
+    "docs-build": "(rm -rf ./docs/public || true) && ./src/dataflow compile ./docs/site.ojs ./docs/public --target style,styleTOC,content,nav,navParent,hash,hashchange --include-styling",
     "docs-publish": "git subtree push --prefix docs/public origin gh-pages",
     "client-watch": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm --watch",
     "client-build": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm"
