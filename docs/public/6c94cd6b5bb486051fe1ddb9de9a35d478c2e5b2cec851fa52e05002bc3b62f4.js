@@ -1,6 +1,6 @@
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["package.json", new URL("./files/20d01ea6168a0baae21e61bbb35b552781c84e5bd18be81c77cbb7f2c3312f3f", import.meta.url)]]);
+  const fileAttachments = new Map([["package.json", new URL("./files/731099c4cec1ae3abaf28e5681fabd180640aa6fbf74e0e3a68602973593f4c7", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer("nav")).define("nav", ["html","FileAttachment"], async function(html,FileAttachment){return(
 html`<nav>
@@ -10,7 +10,7 @@ html`<nav>
 
 <a href="https://github.com/asg017/dataflow" style="color: black; ">
   <i class="bx bxl-github" style=" font-weight: 900; font-size: 1.5rem;"></i>
-  <span style="font-size: 1.5rem; line-height: 1.5rem; font-weight: 500;">Github</span>
+  <span class="gh-label">Github</span>
 </a>`
 )});
   main.variable(observer("content")).define("content", ["html","toc","pages","currentI"], function(html,toc,pages,currentI){return(
@@ -662,6 +662,11 @@ nav {
   padding-left: 2rem;
   padding-right: 4rem;
 }
+.gh-label {
+  font-size: 1.5rem; 
+  line-height: 1.5rem; 
+  font-weight: 500;
+}
 .container {
   display: grid; 
   grid-template-columns: 18rem minmax(auto, 800px);
@@ -703,6 +708,27 @@ nav {
   max-width: 48rem;
   margin: 0 auto;
   padding: 0 .5rem;
+}
+
+@media (max-width: 700px) {
+  .container {
+    grid-template-columns: auto;
+  }
+  .toc-container {
+    position: unset;
+    height: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .toc {
+    border-right: none;
+  }
+  nav {
+    white-space: nowrap;
+  }
+  .gh-label {
+    display: none;
+  }
 }
 
 .version {

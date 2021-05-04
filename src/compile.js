@@ -256,7 +256,7 @@ TODO
 3) allow to write to tar file (test if stdout works)
 */
 
-function compileNotebook(source, treeShake) {
+function compileSingleNotebook(source, treeShake) {
   const compile = new Compiler({
     resolveImportPath: (path, specifiers) => {
       return isObservableImport(path) || ``;
@@ -278,10 +278,11 @@ async function compileNotebook(inPath, output, options) {
   const { treeShake = null, bundle = true } = options;
   if (bundle) return compileBundle(inPath, output, options);
   const source = readFileSync(inPath, "utf8");
-  const compiled = compileNotebook(source, treeShake);
+  const compiled = compileSingleNotebook(source, treeShake);
   writeFileSync(output, compiled, "utf8");
 }
 module.exports = {
   compileBundle,
   compileNotebook,
+  compileSingleNotebook,
 };

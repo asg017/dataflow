@@ -288,7 +288,10 @@ function main() {
   const statusFooter = document.querySelector(".dataflow-footer-status");
 
   function connect() {
-    const socket = new WebSocket("ws://localhost:8080", "echo-protocol");
+    const socket = new WebSocket(
+      `ws://${window.location.host}`,
+      "echo-protocol"
+    );
     socket.addEventListener("open", function (event) {
       console.debug("DATAFLOW", "Socket opened");
       statusFooter.textContent = "✅ Socket connected!";

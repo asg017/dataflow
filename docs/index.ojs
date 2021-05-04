@@ -9,7 +9,7 @@ nav = html`<nav>
 
 <a href="https://github.com/asg017/dataflow" style="color: black; ">
   <i class="bx bxl-github" style=" font-weight: 900; font-size: 1.5rem;"></i>
-  <span style="font-size: 1.5rem; line-height: 1.5rem; font-weight: 500;">Github</span>
+  <span class="gh-label">Github</span>
 </a>` 
 
 content = html`<div class=container>
@@ -641,6 +641,11 @@ nav {
   padding-left: 2rem;
   padding-right: 4rem;
 }
+.gh-label {
+  font-size: 1.5rem; 
+  line-height: 1.5rem; 
+  font-weight: 500;
+}
 .container {
   display: grid; 
   grid-template-columns: 18rem minmax(auto, 800px);
@@ -682,6 +687,27 @@ nav {
   max-width: 48rem;
   margin: 0 auto;
   padding: 0 .5rem;
+}
+
+@media (max-width: 700px) {
+  .container {
+    grid-template-columns: auto;
+  }
+  .toc-container {
+    position: unset;
+    height: 400px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  .toc {
+    border-right: none;
+  }
+  nav {
+    white-space: nowrap;
+  }
+  .gh-label {
+    display: none;
+  }
 }
 
 .version {

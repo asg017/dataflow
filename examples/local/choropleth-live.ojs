@@ -1,0 +1,39 @@
+/*
+FileAttachments:
+  data: ./data/umm
+*/
+md`
+# LiveFileAttachments with choropleth
+`;
+
+
+//B01001_003E
+rawData = {
+  const raw = await fetch(
+    "https://api.census.gov/data/2018/acs/acs5?get=B01001_001E,B01001_003E&for=county:*"
+  ).then((r) => r.json());
+
+  const header = raw[0];
+
+  return raw.slice(1).map(d => {
+    const ret = {};
+    for(const i in header) {
+      ret[header[i]] = d[i];
+    }
+    return ret;
+  })
+}
+
+function valueOf(d) {
+  return d.B01001_003E / d.B01001_001E;
+}
+
+data = new Map(rawData.map(d=>[`${d.state}${d.county}`, valueOf(d)]))
+
+color = d3.scaleQuantize(d3.extent(data.values()), d3.schemeBlues[9])
+
+import { d3, chart } with {data, color} from "https://observablehq.com/@d3/choropleth";
+
+chart;
+
+data;

@@ -1,0 +1,33 @@
+/*
+FileAttachments: 
+  filesize: ./data/filesize.txt
+*/
+
+md`# File Size Visualizer - Live!`
+
+md`~~~
+find . -type f -exec wc -c {} +
+~~~`
+
+f = LiveFileAttachment("filesize");
+
+data = f.text();
+
+fileColor
+
+fileColor = "#75F4F4"
+
+folderColor = "blue"
+
+import {chart} with {
+  data as source, 
+  prettybytes as format,
+  fileColor,
+  folderColor
+} from "https://observablehq.com/@mbostock/file-size-visualizer-bubbles"
+
+chart
+
+md`## Appendix`
+
+prettybytes = (await import("https://cdn.skypack.dev/pretty-bytes")).default
