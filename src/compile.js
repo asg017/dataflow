@@ -243,6 +243,7 @@ async function compileBundle(inPath, outDir, options) {
     }
     : Inspector.into(document.body);
   const main = runtime.module(define, observer);
+  main.define("LiveFileAttachment", ["FileAttachment"], x => x)
   
   </script>`,
     "utf8"

@@ -19,7 +19,6 @@ export function Library() {
     window.DATAFLOW_STDLIB.constants
   );
 
-  const customLibraryResolved = {};
   // key = already added library builtin, e.g. "require", "width"
   // value = { newBuiltin1: def, newBuiltin2: def }
   for (const [depBuiltin, newBuiltins] of Object.entries(

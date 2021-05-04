@@ -41,3 +41,14 @@ dataflow run ./my-notebook.ojs
 ## Documentation
 
 Check out https://alexgarcia.xyz/dataflow for docs! Fun fact, this site is entirely build with Dataflow :eyes:
+
+## Site
+
+```
+/             homepage, link to docs, github, examples
+/docs
+/examples
+  /react
+  /preact
+
+```
