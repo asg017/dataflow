@@ -12,13 +12,13 @@ d3 = require("d3-array", "d3-random");
 n = 10;
 
 chart = svg`<svg width=100 height=100>
-\${d3
+${d3
   .range(n)
   .map(
     (d) =>
-      svg`<circle r=2 fill=pink cx=\${d3.randomUniform(
+      svg`<circle r=2 fill=pink cx=${d3.randomUniform(
         100
-      )()} cy=\${d3.randomUniform(100)()}>`
+      )()} cy=${d3.randomUniform(100)()}>`
   )}`;
 ```
 

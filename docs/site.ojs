@@ -1,7 +1,6 @@
 /*
 FileAttachments: 
   package.json: ../package.json
-  intro: ./intro.md
   quickstart: ./quickstart.md
   stdlib: ./stdlib.md
   file-attachments: ./file-attachments.md
@@ -23,11 +22,8 @@ nav = html`<nav>
 
 content = html`<div class=container>
   ${toc()}
-  <article class=content>
-    ${pages[currentI]()}
-  </article>
+  <article class=content></article>
 </div>`
-
 
 navParent = {
   nav.parentElement.classList.add("nav-parent");
@@ -49,14 +45,21 @@ pageMeta = pages.map(p=>{
   }
 })
 
-pageMeta
-
 mutable currentI = {
   const i = pageMeta.findIndex(p=>p.id === window.location.hash.substring(1));
 
   if(i >=0) return i;
   return 0;
 }
+
+updateContent = {
+  const container = content.querySelector("article.content");
+  while(container.firstChild) container.removeChild(container.firstChild);
+  container.append(pages[currentI]());
+  window.scrollTo(0, 0);
+  return html`<span>`;
+}
+
 
 hashchange = {
   function onhashchange() {
@@ -70,8 +73,6 @@ hashchange = {
 }
 
 hash = {
-  if(window.location.hash) window.scrollTo(0, 0);
-
   window.location.hash = pageMeta[currentI].id;
   document.title = `${pageMeta[currentI].header} / Dataflow Documentation`;
   return html`<span>`;
@@ -83,17 +84,13 @@ files = {
   FileAttachment("intro");
   FileAttachment("quickstart");
   FileAttachment("stdlib");
-  FileAttachment("file");
+  FileAttachment("file-attachments");
   FileAttachment("importing");
   FileAttachment("secrets");
   FileAttachment("production");
   FileAttachment("compiling");
   FileAttachment("reference");
 }
-
-introFile = LiveFileAttachment("intro")
-introText = introFile.text()
-intro = () => md([introText])
 
 quickstartFile = LiveFileAttachment("quickstart")
 quickstartText = quickstartFile.text()
@@ -132,7 +129,7 @@ referenceFile = LiveFileAttachment("reference")
 referenceText = referenceFile.text()
 reference = () => md([referenceText])
 
-pages = [intro, quickstart, importing,  fileattachments, stdlib, secrets, compiling, production, reference]
+pages = [quickstart, importing,  fileattachments, stdlib, secrets, compiling, production, reference]
 
 function toc() {
   return html`<aside class="toc-container">

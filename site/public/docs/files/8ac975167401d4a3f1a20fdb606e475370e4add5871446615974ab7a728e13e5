@@ -1,6 +1,6 @@
 ## Quickstart + Installation
 
-Dataflow is a program that you install on your computer and use on the command line. `dataflow run` will start a dev sever that enable a live editing experience for your `.ojs` notebook files, and `dataflow compile` will compile thise files into re-usable JavaScript ES modules for use in other projects.
+Dataflow is a program that you install on your computer and use on the command line. `dataflow run` will start a dev sever that enable a live editing experience for your `.ojs` notebook files, and `dataflow compile` will compile those files into re-usable JavaScript ES modules for use in other projects.
 
 ### Install
 
@@ -17,10 +17,6 @@ yarn add @alex.garcia/dataflow
 
 dataflow --help
 ```
-
-### `dataflow run`
-
-### `dataflow compile`
 
 ### .ojs Files
 
@@ -44,7 +40,7 @@ everySecond = {
   }
 }
 
-md`It's been \${everySecond} seconds since everySecond has started.`
+md`It's been ${everySecond} seconds since everySecond has started.`
 ```
 
 Cells are written one after the other, where the entire `example.ojs` file is analagous to a single Observable notebook.
@@ -68,3 +64,5 @@ See [Observable’s not JavaScript](https://observablehq.com/@observablehq/obser
 Just like observablehq.com, Dataflow uses the [Observable notebook Standard Library](https://github.com/observablehq/stdlib), so cells like `Promises`, `html`, `md`, `require`, and more all are builtin by default. `viewof` and `mutable` cells are also supported.
 
 One key difference with observablehq.com: The builtin cells for `html` and `svg` use [@observablehq/htl](https://github.com/observablehq/htl) instead. This means that not all notebooks found on observablehq.com will work when importing from Dataflow, but the API is similar enough to make upgrades only take a few minutes.
+
+Also, since `v3.5.0` of the Observable [standard library](https://github.com/observablehq/stdlib), the builtin cells `Plot`, `Inputs`, `vl`, `d3`, `htl` have been included, and are available in Dataflow.

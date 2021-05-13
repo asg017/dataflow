@@ -1,0 +1,127 @@
+/*
+FileAttachments:
+  source_ojs: ./census-api.ojs
+  counties-albers-10m.json: ./data/counties-albers-10m.json
+*/
+md`# Census API
+
+Choropleth adapted from [Choropleth](https://observablehq.com/@d3/choropleth) on Observable (ISC License).
+
+Download the counties map with:
+
+~~~bash 
+wget -O data/counties-albers-10m.json \\
+  https://cdn.jsdelivr.net/npm/us-atlas@3/counties-albers-10m.json
+~~~
+
+This notebook is a bit messier than the other examples, but look at is as a light exporer of "Census variables" inside the [B01001](https://api.census.gov/data/2016/acs/acs1/groups/B01001.html) group. `
+
+md`## ${variable.name} - ${variable.label}`
+
+viewof selVar = Inputs.select(vars, {format: ([variable, subVars]) => `${subVars.get("estimate").label} (${variable})`})
+
+
+
+chart = {
+  const svg = d3.create("svg")
+      .attr("viewBox", [0, 0, 975, 610]);
+
+  svg.append("g")
+      .attr("transform", "translate(580,20)")
+      .append(() => legend({color, title: data.title, width: 320, tickFormat:d3.format(".2%")}));
+
+  svg.append("g")
+    .selectAll("path")
+    .data(topojson.feature(us, us.objects.counties).features)
+    .join("path")
+      .attr("fill", d => color(data.get(d.id)))
+      .attr("d", path)
+    .append("title")
+      .text(d => `${d.properties.name}, ${states.get(d.id.slice(0, 2)).name}
+${format(data.get(d.id))}`);
+
+  svg.append("path")
+      .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+      .attr("fill", "none")
+      .attr("stroke", "white")
+      .attr("stroke-linejoin", "round")
+      .attr("d", path);
+
+  return svg.node();
+}
+
+//B01001_003E
+rawData = {
+  const raw = await fetch(
+    `https://api.census.gov/data/2018/acs/acs5?get=B01001_001E,${variable.name}&for=county:*`
+  ).then((r) => r.json());
+
+  const header = raw[0];
+
+  return raw.slice(1).map(d => {
+    const ret = {};
+    for(const i in header) {
+      ret[header[i]] = d[i];
+    }
+    return ret;
+  })
+}
+
+function valueOf(d) {
+  return d[variable.name] / d.B01001_001E;
+}
+
+data = new Map(rawData.map(d=>[`${d.state}${d.county}`, valueOf(d)]))
+
+B01001 = fetch("https://api.census.gov/data/2018/acs/acs5/groups/B01001/").then(r=>r.json())
+
+
+
+vars = d3.rollup
+  (Object.entries(B01001.variables).map(d=> ({
+    name: d[0],
+    ...d[1]
+  })),//.sort((a,b)=>d3.ascending(a[0], b[0]))), 
+  v => {
+    return new Map([
+      ["estimate_annotation", v.find(d=>d.name.endsWith("EA"))],
+      ["moe_annotation", v.find(d=>d.name.endsWith("MA"))],
+      ["moe", v.find(d=>d.name.endsWith("M"))],
+      ["estimate", v.find(d=>d.name.endsWith("E"))],
+    ])
+  },
+  d => d.name.substring(0, "B01001_XXX".length))
+
+variable = fetch(
+  `https://api.census.gov/data/2018/acs/acs5/variables/${selVar.get("estimate").name}.json`
+).then((r) => r.json());
+
+  
+
+
+color = d3.scaleQuantize(d3.extent(data.values()), d3.schemeBlues[9])
+
+path = d3.geoPath()
+
+format = d => `${d}%`
+
+states = new Map(us.objects.states.geometries.map(d => [d.id, d.properties]))
+
+
+us = FileAttachment("counties-albers-10m.json").json()
+
+topojson = require("topojson-client@3")
+
+
+import {legend} from "https://observablehq.com/@d3/color-legend"
+
+
+md`## Source Code
+
+This is the original source code for this notebook, the \`census-api.ojs\` file.`
+
+md`~~~javascript
+${await FileAttachment("source_ojs").text()}
+~~~`
+
+document.title = "Census API Example / Dataflow";

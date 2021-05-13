@@ -1,6 +1,6 @@
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["package.json", new URL("./files/07c7efa5960047485a11d3228623db0f6125fba22cda82c755cdcbdb9a4523ef", import.meta.url)],["intro", new URL("./files/ebf7fe751e259fab0a9d8c409a2fdb3b84a1e0bc8c62d8843fccc6dc8a2c5804", import.meta.url)],["quickstart", new URL("./files/194191aba20477a10d788f3f66d2064273eabcef6aa5db67cd87ea6018be435b", import.meta.url)],["stdlib", new URL("./files/2b67ac41462ee03b1e174b5dc6bc8a09656aea41a67b76b6c11dc3ddc4694386", import.meta.url)],["file", null],["importing", new URL("./files/13cd00ea80e57d2548fc68f9422f58eadf4f7d220de567fc27c722986640b9f8", import.meta.url)],["secrets", new URL("./files/1b8db0a823ef91ea1cd9f388932e6a44380c650520dbd757a586d13b4bc36076", import.meta.url)],["production", new URL("./files/66f02ffdef97f9468cb8032042015126ab0d8ad9cad741cba2b77e275f416e40", import.meta.url)],["compiling", new URL("./files/6a6be1bca323bc2c0bdd9c092859363c2d7957e574f88d42deeb72562ce81fd4", import.meta.url)],["reference", new URL("./files/6bfe6dcaacc6f4bee0d845f9dff93ebc2fd5f9504c9a89cdfe37928627ae9882", import.meta.url)]]);
+  const fileAttachments = new Map([["package.json", new URL("./files/2e94dea503c3be667d5e9b6ba616003bc01cfe1d43c11b4a3749bd02ab031562", import.meta.url)],["intro", null],["quickstart", new URL("./files/8ac975167401d4a3f1a20fdb606e475370e4add5871446615974ab7a728e13e5", import.meta.url)],["stdlib", new URL("./files/810bce42e9e40e466c2341a756f30bebf482f10c0cf230dce89893407391cf89", import.meta.url)],["file-attachments", new URL("./files/e17d2fef09ef58173696facb5b9857b2669d954aeb0f1198011717529ee70b4c", import.meta.url)],["importing", new URL("./files/eb75aeb7fd114a50db65b3763b2b35fd676c64d5eeba5fc7cc5f9eb4a2e1c60d", import.meta.url)],["secrets", new URL("./files/9964525a8aaf4f1e1a5a32685a8639c297ecdf0b7ac5f3093bc3c5709a560a2c", import.meta.url)],["production", new URL("./files/2e23a9f910d8e8fff0ee5f32a30b464dd0a27dcc08e73282cd7f8f68d9a79349", import.meta.url)],["compiling", new URL("./files/5fe1038695da56b5248ee289dc2cf66fc4918ca97dfd7649e886a1bd931df3df", import.meta.url)],["reference", new URL("./files/b70d3e71a1a87aaa614de9d5c309db8acfe1ffc9613f7384dd5dfe9e7b9bb691", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer("nav")).define("nav", ["html","FileAttachment"], async function(html,FileAttachment){return(
 html`<nav>
@@ -13,12 +13,10 @@ html`<nav>
   <span class="gh-label">Github</span>
 </a>`
 )});
-  main.variable(observer("content")).define("content", ["html","toc","pages","currentI"], function(html,toc,pages,currentI){return(
+  main.variable(observer("content")).define("content", ["html","toc"], function(html,toc){return(
 html`<div class=container>
   ${toc()}
-  <article class=content>
-    ${pages[currentI]()}
-  </article>
+  <article class=content></article>
 </div>`
 )});
   main.variable(observer("navParent")).define("navParent", ["nav","invalidation","html"], function(nav,invalidation,html)
@@ -44,9 +42,6 @@ pages.map(p=>{
   }
 })
 )});
-  main.variable(observer()).define(["pageMeta"], function(pageMeta){return(
-pageMeta
-)});
   main.define("initial currentI", ["pageMeta"], function(pageMeta)
 {
   const i = pageMeta.findIndex(p=>p.id === window.location.hash.substring(1));
@@ -57,6 +52,15 @@ pageMeta
 );
   main.variable(observer("mutable currentI")).define("mutable currentI", ["Mutable", "initial currentI"], (M, _) => new M(_));
   main.variable(null).define("currentI", ["mutable currentI"], _ => _.generator);
+  main.variable(observer("updateContent")).define("updateContent", ["content","pages","currentI","html"], function(content,pages,currentI,html)
+{
+  const container = content.querySelector("article.content");
+  while(container.firstChild) container.removeChild(container.firstChild);
+  container.append(pages[currentI]());
+  window.scrollTo(0, 0);
+  return html`<span>`;
+}
+);
   main.variable(observer("hashchange")).define("hashchange", ["pageMeta","mutable currentI","invalidation","html"], function(pageMeta,$0,invalidation,html)
 {
   function onhashchange() {
@@ -71,8 +75,6 @@ pageMeta
 );
   main.variable(observer("hash")).define("hash", ["pageMeta","currentI","html"], function(pageMeta,currentI,html)
 {
-  if(window.location.hash) window.scrollTo(0, 0);
-
   window.location.hash = pageMeta[currentI].id;
   document.title = `${pageMeta[currentI].header} / Dataflow Documentation`;
   return html`<span>`;
@@ -83,7 +85,7 @@ pageMeta
   FileAttachment("intro");
   FileAttachment("quickstart");
   FileAttachment("stdlib");
-  FileAttachment("file");
+  FileAttachment("file-attachments");
   FileAttachment("importing");
   FileAttachment("secrets");
   FileAttachment("production");
@@ -91,15 +93,6 @@ pageMeta
   FileAttachment("reference");
 }
 );
-  main.variable(observer("introFile")).define("introFile", ["LiveFileAttachment"], function(LiveFileAttachment){return(
-LiveFileAttachment("intro")
-)});
-  main.variable(observer("introText")).define("introText", ["introFile"], function(introFile){return(
-introFile.text()
-)});
-  main.variable(observer("intro")).define("intro", ["md","introText"], function(md,introText){return(
-() => md([introText])
-)});
   main.variable(observer("quickstartFile")).define("quickstartFile", ["LiveFileAttachment"], function(LiveFileAttachment){return(
 LiveFileAttachment("quickstart")
 )});
@@ -172,8 +165,8 @@ referenceFile.text()
   main.variable(observer("reference")).define("reference", ["md","referenceText"], function(md,referenceText){return(
 () => md([referenceText])
 )});
-  main.variable(observer("pages")).define("pages", ["intro","quickstart","importing","fileattachments","stdlib","secrets","compiling","production","reference"], function(intro,quickstart,importing,fileattachments,stdlib,secrets,compiling,production,reference){return(
-[intro, quickstart, importing,  fileattachments, stdlib, secrets, compiling, production, reference]
+  main.variable(observer("pages")).define("pages", ["quickstart","importing","fileattachments","stdlib","secrets","compiling","production","reference"], function(quickstart,importing,fileattachments,stdlib,secrets,compiling,production,reference){return(
+[quickstart, importing,  fileattachments, stdlib, secrets, compiling, production, reference]
 )});
   main.variable(observer("toc")).define("toc", ["html","pages","mutable currentI"], function(html,pages,$0){return(
 function toc() {

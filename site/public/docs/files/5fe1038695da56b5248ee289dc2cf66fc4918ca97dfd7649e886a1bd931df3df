@@ -9,7 +9,7 @@ Compiling does **not** bundle everything needed to run an Observable notebook. Y
 
 Tree-shaking is a technique used to remove un-used code from a compiled bundle. Say your top-level `.ojs` file looks like this:
 
-```js
+```javascript
 md`
 # My notebook!
 `;
@@ -41,7 +41,7 @@ file = FileAttachment("big-file".text()
 
 ```
 
-Notice how `top.ojs` only imports the `helper` cell from `sub.ojs`, meaning it completely ignore the `d3`, `data`, and `file` cells from that submodule (and the `big-file`) FileAttachment.
+Notice how `top.ojs` only imports the `helper` cell from `sub.ojs`, meaning it completely ignore the `d3`, `data`, and `file` cells and the `big-file` FileAttachment from that submodule.
 
 This means that when we are compiling, we can tree-shaking code from local `.ojs` files to remove un-used cells, file attachments, and sub imports. In this case, only code that is required to define `helper` will be included, meaning the `d3`, `data`, `file`, and the unnamed markdown cell will not appear in the compiled output.
 

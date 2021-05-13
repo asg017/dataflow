@@ -49,7 +49,7 @@ function defineLiveFileAttachment(library, liveFileAttachments) {
   );
   return () => {
     return function (name) {
-      return library.Generators.observe((change) => {
+      return library.Generators().observe((change) => {
         change(FA(name));
 
         function onUpdate(e) {
@@ -66,8 +66,9 @@ function defineLiveFileAttachment(library, liveFileAttachments) {
 }
 
 function defineWidth(library, container) {
+  window.library = library;
   return () => {
-    return library.Generators.observe((change) => {
+    return library.Generators().observe((change) => {
       change(null);
       const ro = new ResizeObserver((entries) => {
         for (let entry of entries) {
@@ -79,7 +80,31 @@ function defineWidth(library, container) {
     });
   };
 }
+
+// assets are for suckers
+function addFavicon() {
+  const canvas = html`<canvas width="100" height="100"></canvas>`;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "white";
+  ctx.arc(50, 50, 50, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "black";
+  ctx.font = "700 72px Monospace";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("df", 50, 50);
+
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.href = canvas.toDataURL();
+  const head = document.querySelector("head");
+  head.appendChild(link);
+}
+
 function main() {
+  addFavicon();
   const cellMap = new Map();
 
   const container = document.querySelector("#dataflow-container");

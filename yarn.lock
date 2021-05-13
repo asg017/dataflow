@@ -23,18 +23,18 @@
     acorn "^7.1.1"
     acorn-walk "^7.0.0"
 
-"@observablehq/runtime@^4.8.2":
-  version "4.8.2"
-  resolved "https://registry.yarnpkg.com/@observablehq/runtime/-/runtime-4.8.2.tgz#0fe8c692f207051761dec870fa43046d99c98dca"
-  integrity sha512-wik8Uu92a7w3/cS8r69oHLyHTuZgVGNc+eIz0UwOi10dfpquMC0BzG8AbZzMQQEr1EryxSqNvALFY+vf199dww==
+"@observablehq/runtime@4.9":
+  version "4.9.0"
+  resolved "https://registry.yarnpkg.com/@observablehq/runtime/-/runtime-4.9.0.tgz#eb359942df2b3fc76dadf74943cc6c60ad0cd259"
+  integrity sha512-kzJ04EIcyKmbODLnh2mfmEWAiAz0+s0Ug/bF8sCqbtHZ/r7pmT9f95tMeON6flDm/CN4TaVNtAJjsde3pcNvgQ==
   dependencies:
     "@observablehq/inspector" "^3.2.2"
     "@observablehq/stdlib" "^3.4.1"
 
 "@observablehq/stdlib@^3.4.1":
-  version "3.4.1"
-  resolved "https://registry.yarnpkg.com/@observablehq/stdlib/-/stdlib-3.4.1.tgz#39d88fb9d3b79f3c987e9a0099ac4b6ff9ea8c5d"
-  integrity sha512-v0aoQV3e2NphWvkJC/jDI60bV4Nvwy8XD7PFZdzBZYmcQt/cO1ly7TVRZTHGljXdK5e7W6blFY6lNgevUwfrNw==
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/@observablehq/stdlib/-/stdlib-3.5.0.tgz#2223424937576fd7d51aba4014205bc0ab122001"
+  integrity sha512-sYM4u5U34lZua1xj/nlrik8WgdA443Tw1pyn7f+mYASi5D+jUGOiHuTZYCSmGRXGKCADK+gVL+ksXiShihvWVw==
   dependencies:
     d3-require "^1.2.4"
 
@@ -47,6 +47,13 @@ acorn@^7.1.1:
   version "7.4.1"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
+
+ansi-styles@^4.1.0:
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/ansi-styles/-/ansi-styles-4.3.0.tgz#edd803628ae71c04c85ae7a0906edad34b648937"
+  integrity sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==
+  dependencies:
+    color-convert "^2.0.1"
 
 anymatch@~3.1.1:
   version "3.1.1"
@@ -80,6 +87,14 @@ bufferutil@^4.0.1:
   dependencies:
     node-gyp-build "^4.2.0"
 
+chalk@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/chalk/-/chalk-4.1.1.tgz#c80b3fab28bf6371e6863325eee67e618b77e6ad"
+  integrity sha512-diHzdDKxcU+bAsUboHLPEDQiw0qEe0qd7SYUn3HgcFlWgbDcfLGswOHYeGrHKzG9z6UYf01d9VFMfZxPM1xZSg==
+  dependencies:
+    ansi-styles "^4.1.0"
+    supports-color "^7.1.0"
+
 chokidar@^3.5.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/chokidar/-/chokidar-3.5.1.tgz#ee9ce7bbebd2b79f49f304799d5468e31e14e68a"
@@ -94,6 +109,18 @@ chokidar@^3.5.1:
     readdirp "~3.5.0"
   optionalDependencies:
     fsevents "~2.3.1"
+
+color-convert@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/color-convert/-/color-convert-2.0.1.tgz#72d3a68d598c9bdb3af2ad1e84f21d896abd4de3"
+  integrity sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==
+  dependencies:
+    color-name "~1.1.4"
+
+color-name@~1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/color-name/-/color-name-1.1.4.tgz#c2a09a87acbde69543de6f63fa3995c826c536a2"
+  integrity sha512-dOy+3AuW3a2wNbZHIuMZpTcgjGuLU/uBL/ubcZF9OXbDo8ff4O8yVp5Bf0efS8uEoYo5q4Fx7dY9OgQGXgAsQA==
 
 commander@^7.1.0:
   version "7.1.0"
@@ -181,6 +208,11 @@ glob-parent@~5.1.0:
   integrity sha512-FnI+VGOpnlGHWZxthPGR+QhR78fuiK0sNLkHQv+bL9fQi57lNNdquIbna/WrfROrolq8GK5Ek6BiMwqL/voRYQ==
   dependencies:
     is-glob "^4.0.1"
+
+has-flag@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-4.0.0.tgz#944771fd9c81c81265c4d6941860da06bb59479b"
+  integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
 
 htl@^0.2.5:
   version "0.2.5"
@@ -290,6 +322,13 @@ rw@^1.3.3:
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/rw/-/rw-1.3.3.tgz#3f862dfa91ab766b14885ef4d01124bfda074fb4"
   integrity sha1-P4Yt+pGrdmsUiF700BEkv9oHT7Q=
+
+supports-color@^7.1.0:
+  version "7.2.0"
+  resolved "https://registry.yarnpkg.com/supports-color/-/supports-color-7.2.0.tgz#1b7dcdcb32b8138801b3e478ba6a51caa89648da"
+  integrity sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==
+  dependencies:
+    has-flag "^4.0.0"
 
 to-regex-range@^5.0.1:
   version "5.0.1"

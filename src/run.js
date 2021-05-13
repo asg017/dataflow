@@ -4,22 +4,17 @@ const { readFileSync, writeFileSync } = require("fs");
 const WebSocketServer = require("websocket").server;
 const http = require("http");
 const EventEmitter = require("events");
-const fetch = require("node-fetch");
-const {
-  Compiler,
-  treeShakeModule,
-} = require("@alex.garcia/unofficial-observablehq-compiler");
+const { Compiler } = require("@alex.garcia/unofficial-observablehq-compiler");
 const { ModuleParser } = require("@observablehq/parser");
 const path = require("path");
 const yaml = require("js-yaml");
-const crypto = require("crypto");
 const open = require("open");
 const url = require("url");
+const chalk = require('chalk');
 
-function sha256(s) {
-  const shasum = crypto.createHash("sha256");
-  shasum.update(s);
-  return shasum.digest("hex");
+
+function log(...messages) {
+  console.log(chalk.blue(`[${new Date().toISOString()}]`), ...messages);
 }
 
 function isObservableImport(path) {
@@ -209,7 +204,7 @@ function runServer(params = {}) {
       .catch((err) => console.error("err reading path", err));
   });
   const server = http.createServer(function (request, response) {
-    console.log(`${Date.now()} ${request.method} ${request.url}`);
+    log(chalk.greenBright(request.method), request.url);
     if (request.method === "GET" && request.url === "/") {
       response.writeHead(200);
       const indexHTML = readFileSync(
@@ -268,15 +263,15 @@ function runServer(params = {}) {
   wsServer.on("request", function (request) {
     if (!originIsAllowed(request.origin)) {
       request.reject();
-      console.log(
-        ""`${Date.now()} Connection from origin ${request.origin} rejected.`
+      log(
+        `Connection from origin ${request.origin} rejected.`
       );
       return;
     }
 
     const connection = request.accept("echo-protocol", request.origin);
 
-    console.log(`${Date.now()} Connection accepted.`);
+    log(`Connection accepted.`);
 
     // initial msg to populate
     connection.sendUTF(
@@ -309,8 +304,8 @@ function runServer(params = {}) {
       });
 
     connection.on("close", function (reasonCode, description) {
-      console.log(
-        `${Date.now()} Peer ${connection.remoteAddress} disconnected.`
+      log(
+        `Peer ${connection.remoteAddress} disconnected.`
       );
       sourceEmitter.off("update", onUpdate);
     });
@@ -318,7 +313,7 @@ function runServer(params = {}) {
 
   server.listen(port, function () {
     const url = `http://localhost:${port}`;
-    console.log(`${Date.now()} Server started at ${url}`);
+    log(`Server started at ${url}`);
     params.open && open(url);
   });
 }

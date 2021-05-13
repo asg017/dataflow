@@ -2,7 +2,9 @@
 
 ### Command Line Interface
 
-#### `dataflow run`
+#### `dataflow run <notebook>`
+
+Start a development server that renders the given notebook, and live-updates on changes to the notebook file.
 
 `--allow-file-attachments`
 
@@ -22,13 +24,13 @@ Define a secret that a notebook with access with `Secret("name")`. The format of
 
 `-p, --port <number>`
 
-What port to start the server on. default 8080.
+What port to start the server on. default `8080`.
 
 `--no-open`
 
 By default, dataflow will open a new browser tab/window to the notebook. Use this to disable that behavior.
 
-#### `dataflow compile input output`
+#### `dataflow compile <input> <output>`
 
 `--stdlib <path>`
 
@@ -36,11 +38,11 @@ Define aditional builtin cells, see [Custom Standard Libraries](#custom-standard
 
 `--target <cells>`
 
-By default, the `index.html` file inside the bundle will render the entire notebook, all cells including unnamed cells. `--target` can be used to only render a select few cells. `cells` is the list of cells you want to be rendered, seperated by commas (ex `--target "a,b,viewof c, mutable debug"`).
+By default, the `index.html` file inside the bundle will render all cells in the entire notebook, including unnamed cells. `--target` can be used to only render a select few cells. `cells` is the list of cells you want to be rendered, seperated by commas (ex `--target "a,b,viewof c, mutable debug"`).
 
 `--tree-shake <cells>`
 
-By default, all cells in the input file will included in the compiled output, including unnamed cells. `--tree-shake` can be used to specficy only a select few cells to be including, and dataflow will remove any unnecessary cells, file attachments, and imports that are not needed. `cells` is the list of cells you want to keep (their dependencies will be kept implicitly), seperated by commas (ex `--tree-shake "TimeChart,viewof example,LICENSE"`).
+By default, all cells in the input file will included in the compiled output, including unnamed cells. `--tree-shake` can be used to specify only a select few cells to be including, and dataflow will remove any unnecessary cells, file attachments, and imports that are not needed. `cells` is the list of cells you want to keep (their dependencies will be kept implicitly), seperated by commas (ex `--tree-shake "TimeChart,viewof example,LICENSE"`).
 
 `--include-styling`
 

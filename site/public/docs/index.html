@@ -18,7 +18,7 @@
   import {Runtime, Library, Inspector} from "./core.js";
   import define from "./index.js";
   const runtime = new Runtime(new Library());
-  const target = new Set(["style","styleTOC","content","nav","navParent","hash","hashchange"]);
+  const target = new Set(["style","styleTOC","content","nav","navParent","hash","hashchange","updateContent"]);
   const observer = target.size > 0 
     ? name => {
       if(target.has(name)) return new Inspector(document.body.appendChild(document.createElement("div")));
