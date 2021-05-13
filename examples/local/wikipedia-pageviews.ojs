@@ -69,7 +69,7 @@ md`## Source Code
 This is the original source code for this notebook, the \`wikipedia-pageviews.ojs\` file.`
 
 md`~~~javascript
-${await FileAttachment("source_ojs").text()}
+${(await FileAttachment("source_ojs").text()).replace(/~~~/g, "```")}
 ~~~`
 
 

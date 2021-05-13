@@ -2,7 +2,7 @@ import define1 from "https://api.observablehq.com/@d3/color-legend.js?v=3";
 
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["counties-albers-10m.json", new URL("./files/b82e08fb63aac373d976e0203e5b0d446c321c5e3fca0d7c772ae5900149a2fe", import.meta.url)],["source_ojs", new URL("./files/813794d2d4aec1d3f9a230813284508ead7d0c2467ec38eabe7753f6101f1375", import.meta.url)]]);
+  const fileAttachments = new Map([["counties-albers-10m.json", new URL("./files/b82e08fb63aac373d976e0203e5b0d446c321c5e3fca0d7c772ae5900149a2fe", import.meta.url)],["source_ojs", new URL("./files/e54361c3e7be0df0f0b536e79d37e5d0ce58eccdb461006df04312ed1a8feadd", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer()).define(["md"], function(md){return(
 md`# Census API
@@ -130,7 +130,7 @@ This is the original source code for this notebook, the \`census-api.ojs\` file.
 )});
   main.variable(observer()).define(["md","FileAttachment"], async function(md,FileAttachment){return(
 md`~~~javascript
-${await FileAttachment("source_ojs").text()}
+${(await FileAttachment("source_ojs").text()).replace(/~~~/g, "```")}
 ~~~`
 )});
   main.variable(observer()).define(function(){return(
