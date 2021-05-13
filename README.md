@@ -2,9 +2,33 @@
 
 A self-hosted Observable notebook editor, with support for FileAttachments, Secrets, custom standard libraries, and more!
 
+![Screenshare demonstration of editing an Observable notebook with Dataflow.](https://user-images.githubusercontent.com/15178711/118152924-23c7e280-b3ca-11eb-9862-8059087039b6.mp4)
+
+## Examples
+
+Here are some examples of Observable notebooked created and compiled with Dataflow, along with their original source:
+
+- [Wikpedia Pageview](https://alexgarcia.xyz/dataflow/examples/wiki-pageviews/) ([source code](https://github.com/asg017/dataflow/blob/main/examples/local/wikipedia-pageviews.ojs))
+- [GitHub API Notebook](https://alexgarcia.xyz/dataflow/examples/github-api/) ([source code](https://github.com/asg017/dataflow/blob/main/examples/local/github-api.ojs))
+- [Census API](https://alexgarcia.xyz/dataflow/examples/census-api/) ([source code](https://github.com/asg017/dataflow/blob/main/examples/local/census-api.ojs))
+
+## Documentation
+
+Check out https://alexgarcia.xyz/dataflow for documentation! Fun fact, this site is entirely build with Dataflow :eyes:
+
+## Install
+
+```bash
+npm i -g @alex.garcia/dataflow
+
+dataflow --help
+
+dataflow run ./my-notebook.ojs
+```
+
 ## Background
 
-[Observable notebooks](http://observablehq.com/) are reactive, JavaScript-based computational notebooks that run inside your browser. Dataflow is one of the first fully open-sourced and fully featured Observable notebook editors, with key differences that make it easier to integrate with other developer tools.
+[Observable notebooks](http://observablehq.com/) are reactive, JavaScript-based computational notebooks that run inside your browser. Dataflow is one of the first fully open-sourced and fully featured Observable notebook editors, with key differences that make it easier to integrate with other developer tools!
 
 ### Edit Notebooks in "Observable JavaScript" `.ojs` files
 
@@ -27,28 +51,3 @@ Finally, since Dataflow is just another service that runs on `localhost:8080`, y
 Dataflow aims to be extensible and customizable. [Custom Standard Library](https://alexgarcia.xyz/dataflow/#custom-standard-libraries) make it easier to define new builtin cells for your notebooks, [Secrets](https://alexgarcia.xyz/dataflow/#secrets) make it easier to pass in sensitive configuration, and working with "files as notebooks" mean you can bring in whatever text editor you want.
 
 That being said, There's still a lot of room to make Dataflow more customizable! [Custom styling](https://github.com/asg017/dataflow/issues/9), [more importing options](https://github.com/asg017/dataflow/issues/10), and [more compiling options](https://github.com/asg017/dataflow/issues/17) are planned, so watch this repo for updates!
-
-## Install
-
-```bash
-npm i -g @alex.garcia/dataflow
-
-dataflow --help
-
-dataflow run ./my-notebook.ojs
-```
-
-## Documentation
-
-Check out https://alexgarcia.xyz/dataflow for docs! Fun fact, this site is entirely build with Dataflow :eyes:
-
-## Site
-
-```
-/             homepage, link to docs, github, examples
-/docs
-/examples
-  /react
-  /preact
-
-```
