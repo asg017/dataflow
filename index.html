@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+  <head>
+      <meta charset="utf-8">
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@observablehq/inspector@3/dist/inspector.css">
+      
+  </head>
+  <body>
+  <script type="module">
+  import {Runtime, Library, Inspector} from "./core.js";
+  import define from "./index.js";
+  const runtime = new Runtime(new Library());
+  const target = new Set([]);
+  const observer = target.size > 0 
+    ? name => {
+      if(target.has(name)) return new Inspector(document.body.appendChild(document.createElement("div")));
+    }
+    : Inspector.into(document.body);
+  const main = runtime.module(define, observer);
+  main.define("LiveFileAttachment", ["FileAttachment"], x => x)
+  
+  </script>

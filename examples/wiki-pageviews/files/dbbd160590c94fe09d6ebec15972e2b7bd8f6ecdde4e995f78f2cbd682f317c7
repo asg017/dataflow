@@ -1,0 +1,129 @@
+/*
+FileAttachments:
+  source_ojs: ./wikipedia-pageviews.ojs
+*/
+
+md`# Wikipedia Pageviews
+
+Explore pageviews data for specific Wikipedia pages!` 
+
+
+start = new Date("2020-10-01");
+
+end = new Date("2021-01-01");
+
+//viewof start = html`<input type=date value="2020-10-01">`;
+//viewof end = html`<input type=date value="2021-01-01">`;
+
+viewof pagesSource = Inputs.textarea({
+  rows: 6,
+  width: 220,
+  label: md`<b>Pages"`,
+  value: `Donald_Trump
+Mike_Pence
+Joe_Biden
+Kamala_Harris`,
+});
+
+viewof labelsSource = Inputs.textarea({value:`2020-10-02,⬅ Trump tests positive for COVID19,115,20
+2020-11-03,Election Day ➡,-50,120
+2020-11-07,⬅AP Reports Biden wins,80,10`, label: md`<b>Labels`});
+legend = html`<div>
+${Object.keys(colors).map(k=>html`<b>
+<div style="width: 1rem; height: 1rem; background-color: ${colors[k]}; display: inline-block; border-radius: 50%;"></div>
+ ${k}</b>`)}`
+
+Plot.plot({
+  grid: true,
+  width,
+  marginLeft: 60,
+  color: {
+    domain: Object.keys(colors),
+    range: Object.values(colors),
+  },
+  y: {
+    tickFormat: d3.format(".2s"),
+    domain: yDomain,
+    label: " ⬆ pageviews",
+    nice: true,
+  },
+  marks: [
+    Plot.line(data, { x: "date", y: "value", stroke: (d) => d.page, strokeWidth: 3 }),
+    ...labels.map(d=>Plot.line([
+      [d.date, yDomain[0]],
+      [d.date, yDomain[1]]
+    ], {stroke: "#999"})),
+    ...labels.map(label=>Plot.text([label], {
+      x: label.date,
+      y: yDomain[1], 
+      text: d => d.label,
+      dx: label.dx,
+      dy: label.dy,
+      fontSize: 14
+    }))
+  ],
+});
+
+md`## Source Code
+
+This is the original source code for this notebook, the \`wikipedia-pageviews.ojs\` file.`
+
+md`~~~javascript
+${await FileAttachment("source_ojs").text()}
+~~~`
+
+
+md`## Appendix`
+
+yDomain = d3.scaleLinear()
+  .domain(d3.extent(data, d=>d.value))
+  .nice()
+  .domain();
+
+labels = d3.csvParseRows(labelsSource, d=> ({
+  date: new Date(d[0]), 
+  label: d[1], 
+  dx: d[2],
+  dy: d[3]
+})).filter(d=>d.date >= start && d.date <= end)
+
+
+pages = pagesSource.split("\n");
+
+data = d3.merge(
+  await Promise.all(
+    pages.map(async (page) =>
+      Object.assign(await pageviews(page, start, end), { page })
+    )
+  )
+);
+
+colors = ({
+  Joe_Biden: "steelblue",
+  Kamala_Harris: "lightsteelblue",
+  Donald_Trump: "red",
+  Mike_Pence: "pink",
+});
+
+pageviews = (page, start, end) => {
+  const site = "en.wikipedia";
+  if (typeof start === "string")
+    start = d3.utcFormat("%Y%m%d00")(new Date(start));
+  if (start instanceof Date) start = d3.utcFormat("%Y%m%d00")(start);
+  if (typeof end === "string") end = d3.utcFormat("%Y%m%d")(new Date(end));
+  if (end instanceof Date) end = d3.utcFormat("%Y%m%d")(end);
+
+  return fetch(
+    `https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/${site}/all-access/user/${page}/daily/${start}/${end}`
+  )
+    .then((r) => r.json())
+    .then((d) =>
+      d.items.map((item) => ({
+        date: d3.utcParse("%Y%m%d00")(item.timestamp),
+        value: item.views,
+        page,
+      }))
+    );
+};
+
+document.title = "Wikipedia Pageviews API Example / Dataflow";

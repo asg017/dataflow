@@ -1,0 +1,51 @@
+{
+  "name": "@alex.garcia/dataflow",
+  "version": "0.0.5",
+  "main": "src/dataflow",
+  "repository": "git@github.com:asg017/selfhosted-observable.git",
+  "author": "Alex Garcia <alexsebastian.garcia@gmail.com>",
+  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "dataflow": "src/dataflow"
+  },
+  "files": [
+    "src/*"
+  ],
+  "scripts": {
+    "site-watch": "./src/dataflow run ./site/index.ojs -p 9001",
+    "site-build": "(rm -rf ./site/public || true) && ./src/dataflow compile ./site/index.ojs ./site/public",
+    "docs-watch": "./src/dataflow run ./docs/site.ojs --allow-file-attachments -p 9002",
+    "docs-build": "(rm -rf ./site/public/docs || true) && ./src/dataflow compile ./docs/site.ojs ./site/public/docs --target style,styleTOC,content,nav,navParent,hash,hashchange,updateContent --include-styling",
+    "example-dir-build": "mkdir -p ./site/public/examples",
+    "example-wiki-watch": "./src/dataflow run ./examples/local/wikipedia-pageviews.ojs -p 9003 --allow-file-attachments",
+    "example-wiki-build": "(rm -rf ./site/public/examples/wiki-pageviews || true) && ./src/dataflow compile ./examples/local/wikipedia-pageviews.ojs ./site/public/examples/wiki-pageviews --include-styling",
+    "example-github-watch": "./src/dataflow run ./examples/local/github-api.ojs -p 9004 --allow-file-attachments",
+    "example-github-build": "(rm -rf ./site/public/examples/github-api || true) && ./src/dataflow compile ./examples/local/github-api.ojs ./site/public/examples/github-api --include-styling",
+    "example-census-watch": "./src/dataflow run ./examples/local/census-api.ojs -p 9005 --allow-file-attachments",
+    "example-census-build": "(rm -rf ./site/public/examples/census-api || true) && ./src/dataflow compile ./examples/local/census-api.ojs ./site/public/examples/census-api --include-styling",
+    "site-build-all": "npm run site-build && npm run docs-build && npm run example-dir-build && npm run example-wiki-build && npm run example-github-build && npm run example-census-build",
+    "site-publish": "git subtree push --prefix site/public origin gh-pages",
+    "client-watch": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm --watch",
+    "client-build": "esbuild ./src/client/run.js ./src/client/core.js --outdir=./src/content --bundle --minify --format=esm"
+  },
+  "dependencies": {
+    "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.9",
+    "@observablehq/runtime": "4.9",
+    "chalk": "^4.1.1",
+    "chokidar": "^3.5.1",
+    "commander": "^7.1.0",
+    "htl": "^0.2.5",
+    "js-yaml": "^4.0.0",
+    "node-fetch": "^2.6.1",
+    "open": "^8.0.2",
+    "parse-github-url": "^1.0.2",
+    "rw": "^1.3.3",
+    "websocket": "^1.0.33"
+  },
+  "devDependencies": {
+    "esbuild": "^0.11.14"
+  }
+}

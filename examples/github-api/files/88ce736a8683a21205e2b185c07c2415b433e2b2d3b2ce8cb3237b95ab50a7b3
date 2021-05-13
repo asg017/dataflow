@@ -1,0 +1,81 @@
+/*
+FileAttachments:
+  source_ojs: ./github-api.ojs
+*/
+
+md`
+# GitHub API Notebook
+
+A notebook that demonstrates using the [GitHub API](https://docs.github.com/en/rest) in Dataflow.
+`;
+
+
+viewof repo = Inputs.select( `denoland/deno
+JuliaLang/julia
+facebook/react
+streamlit/streamlit
+observablehq/runtime
+d3/d3
+asg017/dataflow`.split("\n"), {label: "Repository"});
+
+Plot.plot({
+  marginLeft: 100,
+  padding: 0,
+  x: {
+    round: true,
+    grid: true
+  },
+  color: {
+    scheme: "YlGnBu"
+  },
+  facet: {
+    data: data,
+    marginLeft: 100,
+    y: "author"
+  },
+  marks: [
+    Plot.barX(data, Plot.binX({fill: "count"}, {x: "date", inset: 0.5}))
+  ]
+})
+
+Plot.plot({
+  y: {
+    domain: Array.from({length:7}, (_,i)=>i),
+    tickFormat: Plot.formatWeekday("en", "narrow"),
+  },
+  color: {
+    scheme: "YlGnBu"
+  },
+  marks: [
+    Plot.cell(data, {
+      x: d => d.date.getUTCHours(),
+      y: d => d.date.getUTCDay(),
+      fill: (d, i) => i > 0 ? (d.date - data[i - 1].date) / data[i - 1].date : NaN,
+      title: (d, i) => i > 0 ? ((d.date - data[i - 1].date) / data[i - 1].date * 100).toFixed(1) : NaN,
+      inset: 0.5
+    })
+  ]
+});
+
+r = fetch(`https://api.github.com/repos/${repo}`)
+  .then(r=>r.json());
+
+commits = fetch(r.commits_url.replace(/{\/sha}$/, "?per_page=100&since=1990-01-01T00:00:00Z"))
+  .then(r=>r.json())
+
+data = commits.filter(d=>d.author).map(d=>({
+  date: new Date(d.commit.author.date),
+  author: d.author.login,
+  message: d.commit.message
+}));
+
+
+md`## Source Code
+
+This is the original source code for this notebook, the \`github-api.ojs\` file.`
+
+md`~~~javascript
+${await FileAttachment("source_ojs").text()}
+~~~`
+
+document.title = "GitHub API Example / Dataflow";
