@@ -1,6 +1,6 @@
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["source_ojs", new URL("./files/88ce736a8683a21205e2b185c07c2415b433e2b2d3b2ce8cb3237b95ab50a7b3", import.meta.url)]]);
+  const fileAttachments = new Map([["source_ojs", new URL("./files/22dbb963d472ebe6a9bc3201082b7e3e5a74ff3e40ab302ba9aecff68d25436f", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer()).define(["md"], function(md){return(
 md`
@@ -82,7 +82,7 @@ This is the original source code for this notebook, the \`github-api.ojs\` file.
 )});
   main.variable(observer()).define(["md","FileAttachment"], async function(md,FileAttachment){return(
 md`~~~javascript
-${await FileAttachment("source_ojs").text()}
+${(await FileAttachment("source_ojs").text()).replace(/~~~/g, "```")}
 ~~~`
 )});
   main.variable(observer()).define(function(){return(

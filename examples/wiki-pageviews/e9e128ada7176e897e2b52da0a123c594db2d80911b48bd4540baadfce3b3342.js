@@ -1,6 +1,6 @@
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["source_ojs", new URL("./files/dbbd160590c94fe09d6ebec15972e2b7bd8f6ecdde4e995f78f2cbd682f317c7", import.meta.url)]]);
+  const fileAttachments = new Map([["source_ojs", new URL("./files/157de8e31dca7ade4cdb014615698b244f9e4b5da7d9346ab255abde595d580e", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer()).define(["md"], function(md){return(
 md`# Wikipedia Pageviews
@@ -76,7 +76,7 @@ This is the original source code for this notebook, the \`wikipedia-pageviews.oj
 )});
   main.variable(observer()).define(["md","FileAttachment"], async function(md,FileAttachment){return(
 md`~~~javascript
-${await FileAttachment("source_ojs").text()}
+${(await FileAttachment("source_ojs").text()).replace(/~~~/g, "```")}
 ~~~`
 )});
   main.variable(observer()).define(["md"], function(md){return(
