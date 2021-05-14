@@ -51,3 +51,11 @@ Finally, since Dataflow is just another service that runs on `localhost:8080`, y
 Dataflow aims to be extensible and customizable. [Custom Standard Library](https://alexgarcia.xyz/dataflow/#custom-standard-libraries) make it easier to define new builtin cells for your notebooks, [Secrets](https://alexgarcia.xyz/dataflow/#secrets) make it easier to pass in sensitive configuration, and working with "files as notebooks" mean you can bring in whatever text editor you want.
 
 That being said, There's still a lot of room to make Dataflow more customizable! [Custom styling](https://github.com/asg017/dataflow/issues/9), [more importing options](https://github.com/asg017/dataflow/issues/10), and [more compiling options](https://github.com/asg017/dataflow/issues/17) are planned, so watch this repo for updates!
+
+## License
+
+Dataflow is MIT licensed, and heavily relies on these ISC licensed libraries:
+
+- https://github.com/observablehq/parser
+- https://github.com/observablehq/runtime
+- https://github.com/observablehq/stdlib
