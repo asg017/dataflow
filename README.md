@@ -2,7 +2,7 @@
 
 A self-hosted Observable notebook editor, with support for FileAttachments, Secrets, custom standard libraries, and more!
 
-![Screenshare demonstration of editing an Observable notebook with Dataflow.](https://user-images.githubusercontent.com/15178711/118152924-23c7e280-b3ca-11eb-9862-8059087039b6.mp4)
+https://user-images.githubusercontent.com/15178711/118158592-d8fd9900-b3d0-11eb-97e1-70ae97d35038.mp4
 
 ## Examples
 
