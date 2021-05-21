@@ -313,8 +313,9 @@ function main() {
   const statusFooter = document.querySelector(".dataflow-footer-status");
 
   function connect() {
+    const protocol = window.location.protocol.startsWith("https") ? "wss://" : "ws://"
     const socket = new WebSocket(
-      `ws://${window.location.host}`,
+      `${protocol}${window.location.host}`,
       "echo-protocol"
     );
     socket.addEventListener("open", function (event) {
