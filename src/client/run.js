@@ -66,14 +66,14 @@ function defineLiveFileAttachment(library, liveFileAttachments) {
 }
 
 function defineWidth(library, container) {
-  window.library = library;
   return () => {
     return library.Generators().observe((change) => {
-      change(null);
+      let width = container.clientWidth;
+      change(width);
       const ro = new ResizeObserver((entries) => {
-        for (let entry of entries) {
-          change(entry.contentRect.width);
-        }
+        const entry = entries[0];
+        const w = entry.contentRect.width;
+        if(width !== w) change(width = w);
       });
       ro.observe(container);
       return () => ro.disconnect();

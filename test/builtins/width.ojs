@@ -1,0 +1,5 @@
+md`# Testing builtins: width`
+
+w = width;
+
+w, Date.now();
