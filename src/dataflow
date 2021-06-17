@@ -2,6 +2,7 @@
 const { program } = require("commander");
 const { compileNotebook } = require("./compile");
 const { runServer } = require("./run");
+const {format} = require("./format");
 
 function parseSecrets(values) {
   const secrets = new Map();
@@ -52,7 +53,7 @@ program
     });
   });
 
-program
+  program
   .command("run <notebook>")
   .description(
     "Start a server that runs the given Observable notebook (from a .ojs file)."
@@ -85,6 +86,20 @@ program
       open: options.open,
       secrets,
     });
+  });
+
+  program
+  .command("format <notebook>")
+  .description(
+    "Format a notebook's source with the custom Prettier plugin."
+  )
+  .option(
+    "--write",
+    "Over-write the given file with the formatted source.",
+    false
+  )
+  .action((notebook, options) => {
+    format(notebook, options);
   });
 
 program.parse(process.argv);
