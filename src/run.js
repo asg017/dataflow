@@ -1,5 +1,4 @@
 const chokidar = require("chokidar");
-const { readFile } = require("fs").promises;
 const { readFileSync, writeFileSync } = require("fs");
 const WebSocketServer = require("websocket").server;
 const http = require("http");
@@ -12,6 +11,7 @@ const open = require("open");
 const url = require("url");
 const chalk = require('chalk');
 
+const {readSourceCodeSync, readSourceCode} = require("./utils");
 
 function log(...messages) {
   console.log(chalk.blue(`[${new Date().toISOString()}]`), ...messages);
@@ -60,7 +60,7 @@ async function handleLocalImport(request, response, notebookPath, port) {
   });
 
   const importFilePath = path.resolve(path.dirname(notebookPath), importPath);
-  const source = readFileSync(importFilePath, "utf8");
+  const source = readSourceCodeSync(importFilePath, "utf8");
   const compiled = compile.module(source, { treeShake });
 
   response.writeHead(200, {
@@ -86,7 +86,7 @@ async function handleApiFileAttachment(
   const name = q.name;
   const source = q.source || notebookPath;
 
-  const sourceCode = readFileSync(source, "utf8");
+  const sourceCode = readSourceCodeSync(source);
   const header = extractHeader(sourceCode);
   const faPath =
     header && header.FileAttachments && header.FileAttachments[name];
@@ -94,7 +94,7 @@ async function handleApiFileAttachment(
     response.writeHead(404);
     return response.end();
   }
-  const faContents = await readFile(
+  const faContents = await readSourceCode(
     path.resolve(path.dirname(source), faPath)
   ).catch((e) => null);
 
@@ -154,7 +154,7 @@ function runServer(params = {}) {
   let headerPathToNames;
 
   chokidar.watch(notebookPath).on("all", (event, notebookPath) => {
-    readFile(notebookPath, "utf8")
+    readSourceCode(notebookPath)
       .then((source) => {
         // on new source, if any FA changes, then update fileAttachmentWatcher
         const header = extractHeader(source);
