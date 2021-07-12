@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.10 - 2021-07-11
+
+### New
+
+- Shebang support (`#!/usr/bin/env dataflow run`) for `.ojs` files.
 ## v0.0.9 - 2021-05-22
 
 ### Fixed
