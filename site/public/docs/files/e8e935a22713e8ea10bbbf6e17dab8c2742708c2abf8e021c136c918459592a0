@@ -1,10 +1,10 @@
 {
   "name": "@alex.garcia/dataflow",
-  "version": "0.0.6",
+  "version": "0.0.9",
   "main": "src/dataflow",
   "repository": "git@github.com:asg017/selfhosted-observable.git",
   "author": "Alex Garcia <alexsebastian.garcia@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
   "publishConfig": {
     "access": "public"
   },

@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { mkdirSync, copyFileSync } = require("fs");
 const path = require("path");
+const chalk = require('chalk');
 
 const {
   Compiler,
@@ -143,7 +144,7 @@ async function compileBundle(inPath, outDir, options) {
     for (const refFA of referencedFileAttachments) {
       if (!definedFileAttachments.has(refFA)) {
         console.warn(
-          `WARNING: A FileAttachment "${refFA}" was referenced in ${current.path}, but is not defined in the header of the file.`
+          `${chalk.yellow`WARNING`}: A FileAttachment "${refFA}" was referenced in ${current.path}, but is not defined in the header of the file.`
         );
         continue;
       }

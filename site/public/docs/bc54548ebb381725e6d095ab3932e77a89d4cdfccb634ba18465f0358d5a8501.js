@@ -1,6 +1,6 @@
 export default function define(runtime, observer) {
   const main = runtime.module();
-  const fileAttachments = new Map([["package.json", new URL("./files/a1a3f1bcecada24e88b5f285e0aa69967406bc880d81d4ba9fdab39be923fb57", import.meta.url)],["intro", null],["quickstart", new URL("./files/8ac975167401d4a3f1a20fdb606e475370e4add5871446615974ab7a728e13e5", import.meta.url)],["stdlib", new URL("./files/810bce42e9e40e466c2341a756f30bebf482f10c0cf230dce89893407391cf89", import.meta.url)],["file-attachments", new URL("./files/e17d2fef09ef58173696facb5b9857b2669d954aeb0f1198011717529ee70b4c", import.meta.url)],["importing", new URL("./files/eb75aeb7fd114a50db65b3763b2b35fd676c64d5eeba5fc7cc5f9eb4a2e1c60d", import.meta.url)],["secrets", new URL("./files/9964525a8aaf4f1e1a5a32685a8639c297ecdf0b7ac5f3093bc3c5709a560a2c", import.meta.url)],["production", new URL("./files/2e23a9f910d8e8fff0ee5f32a30b464dd0a27dcc08e73282cd7f8f68d9a79349", import.meta.url)],["compiling", new URL("./files/5fe1038695da56b5248ee289dc2cf66fc4918ca97dfd7649e886a1bd931df3df", import.meta.url)],["reference", new URL("./files/b70d3e71a1a87aaa614de9d5c309db8acfe1ffc9613f7384dd5dfe9e7b9bb691", import.meta.url)]]);
+  const fileAttachments = new Map([["package.json", new URL("./files/e8e935a22713e8ea10bbbf6e17dab8c2742708c2abf8e021c136c918459592a0", import.meta.url)],["quickstart", new URL("./files/8ac975167401d4a3f1a20fdb606e475370e4add5871446615974ab7a728e13e5", import.meta.url)],["stdlib", new URL("./files/810bce42e9e40e466c2341a756f30bebf482f10c0cf230dce89893407391cf89", import.meta.url)],["file-attachments", new URL("./files/e17d2fef09ef58173696facb5b9857b2669d954aeb0f1198011717529ee70b4c", import.meta.url)],["importing", new URL("./files/eb75aeb7fd114a50db65b3763b2b35fd676c64d5eeba5fc7cc5f9eb4a2e1c60d", import.meta.url)],["secrets", new URL("./files/9964525a8aaf4f1e1a5a32685a8639c297ecdf0b7ac5f3093bc3c5709a560a2c", import.meta.url)],["production", new URL("./files/2e23a9f910d8e8fff0ee5f32a30b464dd0a27dcc08e73282cd7f8f68d9a79349", import.meta.url)],["compiling", new URL("./files/5fe1038695da56b5248ee289dc2cf66fc4918ca97dfd7649e886a1bd931df3df", import.meta.url)],["reference", new URL("./files/b70d3e71a1a87aaa614de9d5c309db8acfe1ffc9613f7384dd5dfe9e7b9bb691", import.meta.url)],["shebang", new URL("./files/7e2bc186f16000498c9227c6bd4055458bd74d7204e9dd8594d81d0ccf7587fd", import.meta.url)]]);
   main.builtin("FileAttachment", runtime.fileAttachments(name => fileAttachments.get(name)));
   main.variable(observer("nav")).define("nav", ["html","FileAttachment"], async function(html,FileAttachment){return(
 html`<nav>
@@ -82,7 +82,6 @@ pages.map(p=>{
 );
   main.variable(observer("files")).define("files", ["FileAttachment"], function(FileAttachment)
 {
-  FileAttachment("intro");
   FileAttachment("quickstart");
   FileAttachment("stdlib");
   FileAttachment("file-attachments");
@@ -91,6 +90,7 @@ pages.map(p=>{
   FileAttachment("production");
   FileAttachment("compiling");
   FileAttachment("reference");
+  FileAttachment("shebang");
 }
 );
   main.variable(observer("quickstartFile")).define("quickstartFile", ["LiveFileAttachment"], function(LiveFileAttachment){return(
@@ -165,8 +165,17 @@ referenceFile.text()
   main.variable(observer("reference")).define("reference", ["md","referenceText"], function(md,referenceText){return(
 () => md([referenceText])
 )});
-  main.variable(observer("pages")).define("pages", ["quickstart","importing","fileattachments","stdlib","secrets","compiling","production","reference"], function(quickstart,importing,fileattachments,stdlib,secrets,compiling,production,reference){return(
-[quickstart, importing,  fileattachments, stdlib, secrets, compiling, production, reference]
+  main.variable(observer("shebangFile")).define("shebangFile", ["LiveFileAttachment"], function(LiveFileAttachment){return(
+LiveFileAttachment("shebang")
+)});
+  main.variable(observer("shebangText")).define("shebangText", ["shebangFile"], function(shebangFile){return(
+shebangFile.text()
+)});
+  main.variable(observer("shebang")).define("shebang", ["md","shebangText"], function(md,shebangText){return(
+() => md([shebangText])
+)});
+  main.variable(observer("pages")).define("pages", ["quickstart","importing","fileattachments","stdlib","secrets","compiling","shebang","production","reference"], function(quickstart,importing,fileattachments,stdlib,secrets,compiling,shebang,production,reference){return(
+[quickstart, importing,  fileattachments, stdlib, secrets, compiling, shebang, production, reference, ]
 )});
   main.variable(observer("toc")).define("toc", ["html","pages","mutable currentI"], function(html,pages,$0){return(
 function toc() {

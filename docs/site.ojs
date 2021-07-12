@@ -1,3 +1,4 @@
+#!/usr/bin/env dataflow run --allow-file-attachments -p 9002
 /*
 FileAttachments: 
   package.json: ../package.json
@@ -9,6 +10,7 @@ FileAttachments:
   production: ./production.md
   compiling: ./compiling.md
   reference: ./reference.md
+  shebang: ./shebang.md
 */
 nav = html`<nav>
 <h1 id=title>Dataflow Documentation</h1>
@@ -81,7 +83,6 @@ hash = {
 
 // When compiling this notebook, LiveFileAttachment references aren't picked up by the parser (since it's not a "feature" like FileAttachments), so the files aren't copied to the compiled bundle bc they are tree-shaken away. As a workaround, reference them with FileAttachment and include the cell reference in --tree-shake. Should either 1) allow the parser to define new features (fork or PR), 2) allow compiled notebook to include unreferenced FAs, or 3) have some sort of macro/pre-processing that converts LiveFileAttachment -> FileAttachment before passing into parser (hard)
 files = {
-  FileAttachment("intro");
   FileAttachment("quickstart");
   FileAttachment("stdlib");
   FileAttachment("file-attachments");
@@ -90,6 +91,7 @@ files = {
   FileAttachment("production");
   FileAttachment("compiling");
   FileAttachment("reference");
+  FileAttachment("shebang");
 }
 
 quickstartFile = LiveFileAttachment("quickstart")
@@ -129,7 +131,12 @@ referenceFile = LiveFileAttachment("reference")
 referenceText = referenceFile.text()
 reference = () => md([referenceText])
 
-pages = [quickstart, importing,  fileattachments, stdlib, secrets, compiling, production, reference]
+
+shebangFile = LiveFileAttachment("shebang")
+shebangText = shebangFile.text()
+shebang = () => md([shebangText])
+
+pages = [quickstart, importing,  fileattachments, stdlib, secrets, compiling, shebang, production, reference, ]
 
 function toc() {
   return html`<aside class="toc-container">
