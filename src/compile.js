@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const { mkdirSync, copyFileSync } = require("fs");
 const path = require("path");
+const chalk = require('chalk');
 
 const {
   Compiler,
@@ -10,6 +11,7 @@ const {
 const { readFileSync, writeFileSync } = require("rw").dash;
 
 const { extractHeader } = require("./run");
+const {readSourceCodeSync} = require("./utils");
 
 function sha256(s) {
   const shasum = crypto.createHash("sha256");
@@ -86,7 +88,7 @@ async function compileBundle(inPath, outDir, options) {
     // keep track of what FAs are written for resolveFileAttachments
     const writtenFAs = new Map();
 
-    const sourceCode = readFileSync(current.path);
+    const sourceCode = readSourceCodeSync(current.path);
 
     let module = parser.parseModule(sourceCode);
     if (current.treeShake) module = treeShakeModule(module, current.treeShake);
@@ -142,7 +144,7 @@ async function compileBundle(inPath, outDir, options) {
     for (const refFA of referencedFileAttachments) {
       if (!definedFileAttachments.has(refFA)) {
         console.warn(
-          `WARNING: A FileAttachment "${refFA}" was referenced in ${current.path}, but is not defined in the header of the file.`
+          `${chalk.yellow`WARNING`}: A FileAttachment "${refFA}" was referenced in ${current.path}, but is not defined in the header of the file.`
         );
         continue;
       }
@@ -278,7 +280,7 @@ async function compileNotebook(inPath, output, options) {
   // hard coding bundle=true for now bc compileNotebook isn't that useful yet
   const { treeShake = null, bundle = true } = options;
   if (bundle) return compileBundle(inPath, output, options);
-  const source = readFileSync(inPath, "utf8");
+  const source = readSourceCodeSync(inPath, "utf8");
   const compiled = compileSingleNotebook(source, treeShake);
   writeFileSync(output, compiled, "utf8");
 }
