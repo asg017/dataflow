@@ -23,6 +23,11 @@
     acorn "^7.1.1"
     acorn-walk "^7.0.0"
 
+"@observablehq/prettier@^2.2.1-alpha.1":
+  version "2.2.1-alpha.1"
+  resolved "https://registry.yarnpkg.com/@observablehq/prettier/-/prettier-2.2.1-alpha.1.tgz#f84ba0372c0ccb5ec7e9bb1c3955f5de1fe92fca"
+  integrity sha512-1DZEC2xCtL1NRehFxfgj3nETzTCkioX2O8am5a7YrsA2AtvSZ6lvy4+YR/QS9Hbw6YJe6PnAETm6biSuVDyVgg==
+
 "@observablehq/runtime@4.9":
   version "4.9.0"
   resolved "https://registry.yarnpkg.com/@observablehq/runtime/-/runtime-4.9.0.tgz#eb359942df2b3fc76dadf74943cc6c60ad0cd259"
