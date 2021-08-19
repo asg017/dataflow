@@ -32,9 +32,9 @@
     "@observablehq/stdlib" "^3.4.1"
 
 "@observablehq/stdlib@^3.4.1":
-  version "3.5.0"
-  resolved "https://registry.yarnpkg.com/@observablehq/stdlib/-/stdlib-3.5.0.tgz#2223424937576fd7d51aba4014205bc0ab122001"
-  integrity sha512-sYM4u5U34lZua1xj/nlrik8WgdA443Tw1pyn7f+mYASi5D+jUGOiHuTZYCSmGRXGKCADK+gVL+ksXiShihvWVw==
+  version "3.9.0"
+  resolved "https://registry.yarnpkg.com/@observablehq/stdlib/-/stdlib-3.9.0.tgz#2dada7e6c243442440076fcfb849a61e3fb92563"
+  integrity sha512-OM5AdM9uo1oLTeCzbll6UECdVBPbVz8xrxJtNMI35lX8CBj3Sr9jKNSJzserI/QLTvX89Pr2sKLPhXlJ7i4ERQ==
   dependencies:
     d3-require "^1.2.4"
 
