@@ -14,11 +14,15 @@ function readSourceCodeSync(path) {
   return maybeStripShebang(source);
 }
 
- async function readSourceCode(path) {
+async function readSourceCode(path) {
   let source = await readFile(path, "utf8");
   return maybeStripShebang(source)
 }
 
+async function readBinary(path) {
+  return await readFile(path);
+}
+
 module.exports = {
-  readSourceCodeSync,readSourceCode
+  readSourceCodeSync,readSourceCode,readBinary
 }
