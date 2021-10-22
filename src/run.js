@@ -11,7 +11,7 @@ const open = require("open");
 const url = require("url");
 const chalk = require('chalk');
 
-const {readSourceCodeSync, readSourceCode} = require("./utils");
+const {readSourceCodeSync, readSourceCode, readBinary} = require("./utils");
 
 function log(...messages) {
   console.log(chalk.blue(`[${new Date().toISOString()}]`), ...messages);
@@ -94,7 +94,7 @@ async function handleApiFileAttachment(
     response.writeHead(404);
     return response.end();
   }
-  const faContents = await readSourceCode(
+  const faContents = await readBinary(
     path.resolve(path.dirname(source), faPath)
   ).catch((e) => null);
 
