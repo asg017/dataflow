@@ -33,7 +33,7 @@
   },
   "dependencies": {
     "@alex.garcia/unofficial-observablehq-compiler": "0.6.0-alpha.9",
-    "@observablehq/runtime": "4.9",
+    "@observablehq/runtime": "4.17.9",
     "chalk": "^4.1.1",
     "chokidar": "^3.5.1",
     "commander": "^7.1.0",

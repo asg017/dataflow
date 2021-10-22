@@ -49,7 +49,7 @@ function defineLiveFileAttachment(library, liveFileAttachments) {
   );
   return () => {
     return function (name) {
-      return library.Generators().observe((change) => {
+      return library.Generators.observe((change) => {
         change(FA(name));
 
         function onUpdate(e) {
@@ -67,7 +67,7 @@ function defineLiveFileAttachment(library, liveFileAttachments) {
 
 function defineWidth(library, container) {
   return () => {
-    return library.Generators().observe((change) => {
+    return library.Generators.observe((change) => {
       let width = container.clientWidth;
       change(width);
       const ro = new ResizeObserver((entries) => {
